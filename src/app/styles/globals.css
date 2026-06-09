@@ -1,0 +1,57 @@
+@import "tailwindcss";
+@import url("https://fonts.googleapis.com/css2?family=Geist:ital,wght@0,100..900;1,100..900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined");
+
+@theme extend {
+  /* Icons */
+  --font-material: "Material Symbols Outlined";
+
+  /* Colors */
+  --color-primary-blue: #005091;
+  --color-natural-sky-blue: #a8d0ff;
+  --color-natural-grey-blue: #e2f1ff;
+  --color-natural-white: #ffffff;
+  --color-natural-black: #000000;
+  --color-accent-red: #e04040;
+  --color-light-purple-blue: #5281c7;
+  --color-dark-purple-blue: #3d70b5;
+  --color-tinted-white-blue: #f8f8ff;
+  --color-dark-brown: #404756;
+  --color-accent-grey: #a0a0a0;
+  --color-purple-highlight: #dddcff;
+
+  /* Font Sizes */
+  --font-size-preset-display: 60px;
+  --font-size-preset-title: 32px;
+  --font-size-preset-sub-title: 22px;
+  --font-size-preset-body: 16px;
+  --font-size-preset-ui: 14px;
+  --font-size-preset-caption: 12px;
+
+  /* Line Heights */
+  --line-height-preset-display: 30px;
+  --line-height-preset-title: 40px;
+  --line-height-preset-sub-title: 28.6px;
+  --line-height-preset-body: 25.6px;
+  --line-height-preset-ui: 19.6px;
+  --line-height-preset-caption: 15.6px;
+
+  /* Font Family */
+  --font-family-geist:
+    "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
+}
+
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    scroll-behavior: smooth;
+  }
+}
+
+body {
+  font-family: var(--font-family-geist);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
