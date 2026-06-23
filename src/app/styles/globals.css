@@ -1,8 +1,10 @@
 @import "tailwindcss";
-@import url("https://fonts.googleapis.com/css2?family=Geist:ital,wght@0,100..900;1,100..900&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined");
 
-@theme extend {
+/* @import url("https://fonts.googleapis.com/css2?family=Geist:ital,wght@0,100..900;1,100..900&display=swap");
+
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined"); */
+
+@theme {
   /* Icons */
   --font-material: "Material Symbols Outlined";
 
@@ -48,6 +50,74 @@
     box-sizing: border-box;
     scroll-behavior: smooth;
   }
+}
+
+@layer utilities {
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+.ProseMirror {
+  outline: none;
+  min-height: 300px;
+}
+
+.ProseMirror p {
+  margin: 0.5rem 0;
+}
+
+.ProseMirror h1 {
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.ProseMirror h2 {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.ProseMirror h3 {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.ProseMirror {
+  height: 100%;
+  min-height: 100%;
+  outline: none;
+  overflow-y: auto;
+  word-break: break-word;
+}
+
+.ProseMirror ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+}
+
+.ProseMirror ol {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+}
+
+.ProseMirror li {
+  display: list-item;
+}
+
+.selection {
+  background-color: #dbeafe;
+  border-radius: 4px;
+}
+
+.ProseMirror mark {
+  background-color: #dcfce7;
 }
 
 body {
