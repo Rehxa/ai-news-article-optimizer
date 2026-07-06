@@ -43,4 +43,9 @@ export const AIRequest = {
       mode: "selectiveSuggestion",
       articleContent: content,
     }),
+  description: ({ content }) =>
+    runAI({
+      mode: "description",
+      articleContent: content,
+    }),
 };

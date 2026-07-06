@@ -1,21 +1,28 @@
-export default function ToolBar({ panels, onToggle }) {
+export default function ToolBar({ panels, onToggle, title }) {
   return (
     <div className="bg-tinted-white-blue px-6  p-3 rounded-2xl shadow-md h-15 flex flex-row items-center justify-between">
       <div className="flex flex-row items-center gap-4">
         <button
           aria-label="Go back"
           title="Go back"
-          onClick={() => alert("Back to be added")}
+          onClick={onToggle.back}
           className="material-symbols-outlined text-3xl cursor-pointer text-primary-blue"
         >
           arrow_back
         </button>
 
-        <div className="material-symbols-outlined text-3xl cursor-pointer text-dark-brown">
+        <div className="material-symbols-outlined text-3xl cursor-pointer text-primary-blue">
           library_books
         </div>
 
-        <h2 className="text-2xl font-bold text-dark-brown">Untitled</h2>
+        <button
+          onClick={onToggle.saveAs}
+          className="relative h-7 overflow-hidden group w-[40vw] cursor-pointer"
+        >
+          <h2 className="text-2xl font-bold text-dark-brown text-start whitespace-nowrap transition-transform duration-1000 ease-linear group-hover:translate-x-[calc(-50%)] z-10">
+            {title}
+          </h2>
+        </button>
       </div>
 
       <div className="flex flex-row items-center gap-3">
@@ -80,7 +87,7 @@ export default function ToolBar({ panels, onToggle }) {
         </button>
         <div className="h-6 w-[2px] bg-accent-grey rounded-lg"></div>
         <button
-          onClick={() => alert("Save description to be added")}
+          onClick={onToggle.saveAs}
           aria-label="Save as"
           title="Save as"
           className="material-symbols-outlined text-primary-blue cursor-pointer"
@@ -89,7 +96,7 @@ export default function ToolBar({ panels, onToggle }) {
         </button>
         <div className="h-6 w-[2px] bg-accent-grey rounded-lg"></div>
         <button
-          onClick={() => alert("Delete to be added")}
+          onClick={onToggle.delete}
           aria-label="Delete"
           title="Delete"
           className="material-symbols-outlined text-accent-red cursor-pointer"

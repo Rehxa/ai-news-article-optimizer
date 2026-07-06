@@ -28,6 +28,7 @@ export class User {
    */
   toJSON() {
     return {
+      id: this.id,
       email: this.email,
       createdAt: this.createdAt,
     };

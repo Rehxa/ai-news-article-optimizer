@@ -8,6 +8,8 @@ import SuggestionPanel from "./components/suggestion_panel";
 import StatPanel from "./components/stat_panel";
 import HighlightSuggestionPanel from "./components/highlight_suggestion_panel";
 import ConfigurePanel from "./components/configure_panel";
+import { NameDialog } from "./components/name_dialog";
+import { CustomDialog } from "../components/custom_dialog.jsx";
 import { getMockArticleById } from "../../../lib/data/mocks";
 import { Article } from "../../../lib/models/article";
 import {
@@ -18,7 +20,14 @@ import {
 import { AIRequest } from "@/lib/utils/ai_utils.js";
 import { content } from "../../../../tailwind.config";
 
+import { useRouter, useParams } from "next/navigation";
+
+import { useDebouncedSave } from "@/lib/hooks/useDebouncedSave.js";
+
 export default function ArticleOptimizerPage() {
+  //params
+  const { id } = useParams();
+  const router = useRouter();
   // All state
   //UI
   const [showInput, setShowInput] = useState(true);
@@ -27,12 +36,16 @@ export default function ArticleOptimizerPage() {
   const [showStat, setShowStat] = useState(true);
   const [showConfig, setShowConfig] = useState(false);
   const [showHighlight, setShowHighlight] = useState(false);
+  const [showNameDialogPopup, setShowNameDialogPopup] = useState(false);
+  const [showDeletePopup, setShowDeletePopup] = useState(false);
   // Determine if sidebar renders at all
   const showSidebar = showSuggestion || showStat || showConfig || showHighlight;
 
   // DATA
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [docTitle, setDocTitle] = useState("");
+  const [docDescription, setDocDescription] = useState("");
   const [tone, setTone] = useState("professional");
   // const [customInstructions, setCustomInstructions] = useState("");
   // const [articleContent, setArticleContent] = useState("");
@@ -46,27 +59,74 @@ export default function ArticleOptimizerPage() {
   //Stat
   const [score, setScore] = useState(0);
 
-  const article = useMemo(
-    () => new Article(getMockArticleById("article_001")),
-    [],
-  );
+  const [article, setArticle] = useState(null);
+  const [pageLoading, setPageLoading] = useState(true);
 
-  //init data
+  // const article = useMemo(
+  //   () => new Article(getMockArticleById("article_001")),
+  //   [],
+  // );
+
+  // //init data
+  // useEffect(() => {
+  //   setInputText(article.content);
+  //   setScore(article.aiScore);
+  //   // setOutputText(article.content);
+  // }, [article]);
+
+  const userId = "user_001";
   useEffect(() => {
-    setInputText(article.content);
-    setScore(article.aiScore);
-    // setOutputText(article.content);
-  }, [article]);
+    const fetchArticle = async () => {
+      try {
+        setPageLoading(true);
+        const res = await fetch(
+          `/api/articles?userId=${userId}&articleId=${id}`,
+        );
+        const data = await res.json();
+        setArticle(new Article(data));
+      } catch (error) {
+        console.error("Error fetching article:", error);
+      } finally {
+        setPageLoading(false);
+      }
+    };
+    if (id) fetchArticle();
+  }, [id]);
 
-  //! need changes
-  const displayArticle = useMemo(() => {
-    return new Article({
-      ...article,
-      content: inputText,
-      optimizedContent: outputText,
-      aiScore: score,
+  // Debounced save for input text changes
+  useDebouncedSave(inputText, 4000, (val) => {
+    if (!id) return;
+    fetch(`/api/articles/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "updateContent",
+        content: val,
+      }),
     });
-  }, [inputText, outputText, article, score]);
+  });
+  // Debounced save for output text changes
+  useDebouncedSave(outputText, 4000, (val) => {
+    if (!id) return;
+    fetch(`/api/articles/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "updateContent",
+        optimizedContent: val,
+      }),
+    });
+  });
+
+  //initalize data when article is fetched
+  useEffect(() => {
+    if (!article) return;
+    setInputText(article.content);
+    setOutputText(article.optimizedContent || "");
+    setScore(article.aiScore);
+    setDocTitle(article.title || "Untitled");
+    setDocDescription(article.description);
+  }, [article]);
 
   //Stats
   const optimizedStats = useMemo(
@@ -76,23 +136,7 @@ export default function ArticleOptimizerPage() {
 
   const originalStats = useMemo(() => getOriginalStats(inputText), [inputText]);
 
-  // const displayArticle = useMemo(() => {
-  //   return new Article({
-  //     ...article.toJSON(),
-  //     content: inputText,
-  //     optimizedContent: outputText,
-  //   });
-  // }, [inputText, outputText, article]);
-
-  // const handleInputTextChange = (e) => {
-  //   setInputText(e.target.value);
-  // };
-
   const handleClearInput = () => setInputText("");
-
-  // const handleOutputTextChange = (e) => {
-  //   setOutputText(e.target.value);
-  // };
 
   const handleOptimizeAll = async () => {
     setLoading(true);
@@ -121,6 +165,21 @@ export default function ArticleOptimizerPage() {
         text: item.text,
       })),
     );
+
+    await fetch(`/api/articles/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "updateContent",
+        content: inputText,
+        optimizedContent: rewrite,
+      }),
+    });
+    await fetch(`/api/articles/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "updateScore", aiScore: score }),
+    });
 
     setShowHighlight(false);
     setShowConfig(false);
@@ -189,18 +248,25 @@ export default function ArticleOptimizerPage() {
     setLoading(false);
   };
 
-  const handleOptimized = async () => {
-    setLoading(true);
-    const rewrite = await AIRequest.rewrite({ content: inputText, tone: tone });
-    setOutputText(rewrite);
-    setShowOptimize(true);
-    setLoading(false);
-  };
+  // const handleOptimized = async () => {
+  //   setLoading(true);
+  //   const rewrite = await AIRequest.rewrite({ content: inputText, tone: tone });
+  //   setOutputText(rewrite);
+  //   setShowOptimize(true);
+  //   setLoading(false);
+  // };
   const handleOptimizedScore = async () => {
     setLoading(true);
     const score = await AIRequest.score({ content: outputText });
     console.log(score);
     setScore(score);
+
+    await fetch(`/api/articles/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "updateScore", aiScore: score }),
+    });
+
     setShowConfig(false);
     setShowStat(true);
     setLoading(false);
@@ -214,15 +280,96 @@ export default function ArticleOptimizerPage() {
     );
   };
 
+  const handleAIDescription = async () => {
+    setLoading(true);
+    try {
+      const description = await AIRequest.description({
+        content: outputText || inputText,
+      });
+      // setDocDescription(description);
+      console.log("AI generated description:", description);
+      console.log("docDescription:", docDescription);
+      return description;
+    } catch (error) {
+      console.error("Error generating AI description:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveAs = async (title, description) => {
+    try {
+      setLoading(true);
+      await fetch(`/api/articles/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "updateSaveAs",
+          title: title,
+          description: description,
+        }),
+      });
+      setDocTitle(title);
+      setDocDescription(description);
+    } catch (error) {
+      console.error("Error saving article:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteArticle = async () => {
+    try {
+      setLoading(true);
+      await fetch(`/api/articles/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "softDelete" }),
+      });
+      router.push("/views/my_article");
+    } catch (error) {
+      console.error("Error deleting article:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateArticle = async () => {
+    try {
+      const res = await fetch("/api/articles", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: "user_001",
+          title: "Untitled Article",
+          description: "",
+          content: "",
+        }),
+      });
+      const data = await res.json(); // { id, message }
+      console.log("Article created:", data);
+      router.push(`/views/article/${data.id}`);
+    } catch (error) {
+      console.error("Error creating article:", error);
+    }
+  };
+
   return (
     <div className="w-screen h-screen bg-natural-white flex items-start justify-start flex-row gap-2 overflow-hidden">
       {/* sidebar */}
-      <Sidebar />
-
+      <Sidebar
+        onToggle={{
+          myArticles: () => router.push("/views/my_article"),
+          recycleBin: () => router.push("/views/recycle_bin"),
+          settings: () => router.push("/views/settings"),
+          addNewArticle: () => handleCreateArticle(),
+        }}
+      />
       {/* main content */}
       <div className="w-full h-full flex flex-col p-2 gap-2">
         {/* toolbar - Fixed text margins for alignment */}
         <Toolbar
+          title={docTitle || "Untitled"}
           panels={{
             input: showInput,
             optimize: showOptimize,
@@ -281,6 +428,13 @@ export default function ArticleOptimizerPage() {
               setShowStat(false);
               setShowHighlight(false);
             },
+            saveAs: () => {
+              setShowNameDialogPopup(true);
+            },
+            delete: () => {
+              setShowDeletePopup(true);
+            },
+            back: () => router.back(),
           }}
         />
 
@@ -299,7 +453,7 @@ export default function ArticleOptimizerPage() {
             <OutputPanel
               value={outputText}
               onChange={setOutputText}
-              onReOpimized={handleOptimized}
+              onReOpimized={handleOptimizeAll}
               onSelectionChange={setSelection}
               selection={selection}
               setEditorActions={setEditorActions}
@@ -344,6 +498,35 @@ export default function ArticleOptimizerPage() {
           )}
         </div>
       </div>
+      {/* Name/Description Dialog  */}
+      <NameDialog
+        title="Name and Description"
+        docTitle={docTitle}
+        docDescription={docDescription}
+        onConfirm={(title, description) => {
+          handleSaveAs(title, description);
+          setShowNameDialogPopup(false);
+        }}
+        onCancel={() => setShowNameDialogPopup(false)}
+        isOpen={showNameDialogPopup}
+        onAIDescription={handleAIDescription}
+      />
+      {/* Delete article dialog */}
+      <CustomDialog
+        title="Delete articles"
+        message={`Are you sure you want to delete this articles?`}
+        isDelete={true}
+        icon={
+          <img
+            src="/assets/Inbox-cleanup-rafiki.svg"
+            alt="Inbox-cleanup"
+            className="w-[85%]"
+          />
+        }
+        isOpen={showDeletePopup}
+        onConfirm={handleDeleteArticle}
+        onCancel={() => setShowDeletePopup(false)}
+      />{" "}
     </div>
   );
 }

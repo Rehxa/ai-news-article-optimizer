@@ -102,13 +102,35 @@ You score articles based on clarity, structure, and engagement.
     userTemplate: `
 Evaluate this article.
 
- Out of 100, return format ONLY:
+Out of 100, return format ONLY:
 
 X
 
 ARTICLE:
 {ARTICLE_CONTENT}
     `.trim(),
+  },
+
+  description: {
+    system: `
+You are an expert content writer.
+Your job is to create concise, accurate descriptions of articles.
+Write naturally while preserving the article's main idea.
+  `.trim(),
+
+    userTemplate: `
+Generate a short description for the following article.
+
+Rules:
+- Maximum 2 sentences.
+- Keep it under 50 words.
+- Be informative, not clickbait.
+- Do not invent information.
+- Return ONLY the description.
+
+ARTICLE:
+{ARTICLE_CONTENT}
+  `.trim(),
   },
 };
 

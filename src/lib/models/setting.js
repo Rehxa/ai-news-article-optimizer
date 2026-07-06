@@ -4,20 +4,18 @@
  */
 
 export class Setting {
-  constructor({ userId, toneOfVoice, instruction }) {
+  constructor({ userId, toneOfVoice }) {
     this.userId = userId;
     this.toneOfVoice = toneOfVoice;
-    this.instruction = instruction;
   }
 
   /**
    * Factory method for creating new Settings instances
    */
-  static create(userId, toneOfVoice = "professional", instruction = "") {
-    return new Settings({
+  static create(userId, toneOfVoice = "professional") {
+    return new Setting({
       userId,
       toneOfVoice,
-      instruction,
     });
   }
 
@@ -28,7 +26,6 @@ export class Setting {
     return {
       userId: this.userId,
       toneOfVoice: this.toneOfVoice,
-      instruction: this.instruction,
     };
   }
 }

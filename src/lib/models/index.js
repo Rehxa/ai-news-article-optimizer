@@ -4,5 +4,5 @@
  */
 
 export { User } from "./user.js";
-export { Settings } from "./setting.js";
+export { Setting } from "./setting.js";
 export { Article } from "./article.js";
