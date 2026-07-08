@@ -4,9 +4,9 @@
  */
 
 import {
-  getSettingsByUserId,
-  updateSettingsToneOfVoice,
-  createDefaultSettings,
+  getSettingByUserId,
+  updateSettingToneOfVoice,
+  createDefaultSetting,
 } from "@/lib/services/firestore";
 
 export async function GET(req) {
@@ -18,7 +18,7 @@ export async function GET(req) {
       return Response.json({ error: "userId is required" }, { status: 400 });
     }
 
-    const settings = await getSettingsByUserId(userId);
+    const settings = await getSettingByUserId(userId);
     return Response.json(settings);
   } catch (error) {
     console.error("GET /api/settings error:", error);
@@ -38,7 +38,7 @@ export async function POST(req) {
       return Response.json({ error: "userId is required" }, { status: 400 });
     }
 
-    await createDefaultSettings(userId);
+    await createDefaultSetting(userId);
     return Response.json(
       { message: "Default settings created" },
       { status: 201 },
@@ -64,7 +64,7 @@ export async function PATCH(req) {
       );
     }
 
-    await updateSettingsToneOfVoice(userId, toneOfVoice);
+    await updateSettingToneOfVoice(userId, toneOfVoice);
     return Response.json({ message: "Settings updated" });
   } catch (error) {
     console.error("PATCH /api/settings error:", error);

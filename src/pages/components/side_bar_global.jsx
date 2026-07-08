@@ -1,13 +1,17 @@
 "use client";
-import AddNewCard from "@/app/pages/components/add_new_card";
+import AddNewCard from "@/pages/components/add_new_card";
+import { CustomDialog } from "@/pages/components/custom_dialog.jsx";
+import { useState } from "react";
+
 export default function SideBarGlobal({
   mode,
   onAddnewArticle,
   onMyArticles,
   onRecycleBin,
   onSettings,
-  onLogout,
+  handleConfirmLogout,
 }) {
+  const [showLogoutPopup, setShowLogoutPopup] = useState(false);
   return (
     <div className="w-[17vw] h-screen bg-primary-blue flex flex-col items-center p-4 gap-4">
       {/* Profile Section */}
@@ -72,7 +76,7 @@ export default function SideBarGlobal({
             />
             {/* Log Out Button */}
             <button
-              onClick={onLogout}
+              onClick={() => setShowLogoutPopup(true)}
               className="bg-dark-purple-blue  hover:bg-[#4A7BC4] border border-white rounded-lg px-1 py-1 flex items-center gap-3 transition justify-center cursor-pointer"
             >
               <span className="material-symbols-outlined text-white text-lg">
@@ -83,6 +87,23 @@ export default function SideBarGlobal({
           </div>
         </div>
       </div>
+
+      <CustomDialog
+        title="Log Out"
+        message="Are you sure you want to log out of this account?"
+        isDelete={false}
+        icon={
+          <img
+            src="/assets/Curious-amico.svg"
+            alt="Inbox-cleanup"
+            className="w-[85%]"
+          />
+        }
+        isOpen={showLogoutPopup}
+        onConfirm={handleConfirmLogout}
+        onCancel={() => setShowLogoutPopup(false)}
+        isLogOut={true}
+      />
     </div>
   );
 }

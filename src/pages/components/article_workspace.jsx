@@ -1,8 +1,9 @@
 // lib/components/ArticleWorkspace.jsx
-import SideBarGlobal from "@/app/pages/components/side_bar_global";
-import ArticleCard from "@/app/pages/components/article_card";
-import AddNewCard from "@/app/pages/components/add_new_card";
-import Pagination from "@/app/pages/my_article/components/pagination";
+import SideBarGlobal from "@/pages/components/side_bar_global";
+import ArticleCard from "@/pages/components/article_card";
+import AddNewCard from "@/pages/components/add_new_card";
+import Pagination from "@/pages/my_article/components/pagination";
+import ActionButton from "@/pages/components/action_button.jsx";
 export function ArticleWorkspace({
   articles,
   loading,
@@ -223,21 +224,5 @@ function ButtonGroup({
         </>
       )}
     </div>
-  );
-}
-
-function ActionButton({ icon, color, label, onClick }) {
-  const colorClass =
-    color === "red"
-      ? "border-accent-red text-accent-red"
-      : "border-primary-blue text-primary-blue";
-  return (
-    <button
-      className={`border-1 ${colorClass} flex flex-row gap-2 items-center rounded-full px-4 py-2 cursor-pointer hover:opacity-50`}
-      onClick={onClick}
-    >
-      <span className="material-symbols-rounded">{icon}</span>
-      <h1 className="font-bold">{label}</h1>
-    </button>
   );
 }

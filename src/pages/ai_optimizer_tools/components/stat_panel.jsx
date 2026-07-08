@@ -1,4 +1,4 @@
-import ProgressCircle from "@/app/pages/ai_optimizer_tools/components/progress_circle";
+import ProgressCircle from "@/pages/ai_optimizer_tools/components/progress_circle";
 export default function StatPanel({
   optimizedWordCount,
   originalWordCount,

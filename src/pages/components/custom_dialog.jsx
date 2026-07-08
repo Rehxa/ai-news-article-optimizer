@@ -6,6 +6,7 @@ export function CustomDialog({
   onCancel,
   isOpen = true,
   isDelete = false,
+  isLogOut = false,
 }) {
   if (!isOpen) return null;
 
@@ -27,7 +28,9 @@ export function CustomDialog({
         <div className="border-b-2 border-primary-blue rounded-full"></div>
 
         {/* Content */}
-        <div className="flex flex-row gap-4 text-center items-center mt-6 mb-6 space-y-4">
+        <div
+          className={`flex ${isLogOut ? "flex-col" : "flex-row"} gap-4 text-center items-center mt-6 mb-6 space-y-4`}
+        >
           {icon && (
             <div className="flex justify-center flex-2 mb-0">{icon}</div>
           )}

@@ -4,11 +4,12 @@
  */
 
 export class User {
-  constructor({ id, email, password, createdAt }) {
+  constructor({ id, email, password, createdAt, toneOfVoice }) {
     this.id = id; // String: unique user ID
     this.email = email; // String: user email
     this.password = password; // String: hashed password (Firebase Auth handles this)
-    this.createdAt = createdAt; // Timestamp: account creation time
+    this.createdAt = createdAt; // Timestamp: ;account creation time
+    this.toneOfVoice = toneOfVoice ?? "professional";
   }
 
   /**
@@ -20,6 +21,7 @@ export class User {
       email,
       password,
       createdAt: new Date(),
+      toneOfVoice: "professional",
     });
   }
 
@@ -31,6 +33,7 @@ export class User {
       id: this.id,
       email: this.email,
       createdAt: this.createdAt,
+      toneOfVoice: this.toneOfVoice,
     };
   }
 }

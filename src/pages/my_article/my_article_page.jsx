@@ -1,10 +1,10 @@
 "use client";
-import { CustomDialog } from "@/app/pages/components/custom_dialog.jsx";
-import SideBarGlobal from "@/app/pages/components/side_bar_global.jsx";
+import { CustomDialog } from "@/pages/components/custom_dialog.jsx";
+import SideBarGlobal from "@/pages/components/side_bar_global.jsx";
 import ArticleCard from "../components/article_card";
 import AddNewCard from "../components/add_new_card";
 import { getAllMockArticles } from "@/lib/data/mocks/mockArticles";
-import Pagination from "@/app/pages/my_article/components/pagination";
+import Pagination from "@/pages/my_article/components/pagination";
 
 import { useState, useEffect, useMemo, useRef } from "react";
 export default function MyArticlePage() {

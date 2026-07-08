@@ -107,7 +107,13 @@ export async function getArticleById(articleId) {
 /**
  * Create a new article
  */
-export async function createArticle(userId, title, description, content) {
+export async function createArticle(
+  userId,
+  title,
+  description,
+  content,
+  overrideToneOfVoice,
+) {
   try {
     const now = new Date();
     const articleData = {
@@ -120,7 +126,7 @@ export async function createArticle(userId, title, description, content) {
       createdAt: Timestamp.fromDate(now),
       updatedAt: Timestamp.fromDate(now),
       deletedAt: null,
-      overrideToneOfVoice: null,
+      overrideToneOfVoice: overrideToneOfVoice,
       aiScore: 0,
     };
 

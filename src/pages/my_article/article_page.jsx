@@ -1,26 +1,23 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { CustomDialog } from "@/app/pages/components/custom_dialog.jsx";
-import SideBarGlobal from "@/app/pages/components/side_bar_global.jsx";
-import { ArticleWorkspace } from "@/app/pages/components/article_workspace";
+import { CustomDialog } from "@/pages/components/custom_dialog.jsx";
+import SideBarGlobal from "@/pages/components/side_bar_global.jsx";
+import { ArticleWorkspace } from "@/pages/components/article_workspace";
 import { useMultiSelect } from "@/lib/hooks/useMultiSelect";
 import { useArticleListControls } from "@/lib/hooks/useArticleListControls";
+import { useRouter } from "next/navigation";
 
-export default function RecycleBinPage() {
+export default function MyArticlePage() {
   const router = useRouter();
-
   const [allArticles, setAllArticles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showDeletePopup, setShowDeletePopup] = useState(false);
   const [showDeleteAllPopup, setShowDeleteAllPopup] = useState(false);
-  const [showRestorePopup, setShowRestorePopup] = useState(false);
-  const [showRestoreAllPopup, setShowRestoreAllPopup] = useState(false);
   const [showAlertPopup, setShowAlertPopup] = useState(false);
 
   const {
-    isSelectionState,
     selectedIds,
+    isSelectionState,
     handleSelection,
     cancelLongPress,
     toggleSelection,
@@ -45,18 +42,10 @@ export default function RecycleBinPage() {
     const fetchArticles = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`/api/articles?userId=${userId}&bin=true`);
+        const res = await fetch(`/api/articles?userId=${userId}`);
         const data = await res.json();
+        console.log("[STEP 3 - CLIENT RAW DATA]", data);
         setAllArticles(data);
-        console.log(
-          "[STEP 5 - fectching CHECK]",
-          allArticles.map((a) => ({
-            id: a.id,
-            title: a.title,
-            selected: selectedIds.has(a.id),
-            isInBin: a.isInBin,
-          })),
-        );
       } catch (error) {
         console.error("Error:", error);
       } finally {
@@ -67,19 +56,7 @@ export default function RecycleBinPage() {
     fetchArticles();
   }, [userId]);
 
-  const handleRestore = () => {
-    if (selectedIds.size === 0) {
-      setShowAlertPopup(true);
-    } else {
-      setShowRestorePopup(true);
-    }
-  };
-
-  const handleRestoreAll = () => {
-    setShowRestoreAllPopup(true);
-  };
-
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (selectedIds.size === 0) {
       setShowAlertPopup(true);
     } else {
@@ -87,9 +64,9 @@ export default function RecycleBinPage() {
     }
   };
 
-  const handleDeleteAll = () => {
-    setShowDeleteAllPopup(true);
-  };
+  //   const handleDeleteAll = async () => {
+  //     setShowDeleteAllPopup(true);
+  //   };
 
   const handleConfirmDelete = async () => {
     const ids = [...selectedIds];
@@ -99,7 +76,7 @@ export default function RecycleBinPage() {
           fetch(`/api/articles/${id}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ action: "delete" }),
+            body: JSON.stringify({ action: "softDelete" }),
           }),
         ),
       );
@@ -120,7 +97,7 @@ export default function RecycleBinPage() {
           fetch(`/api/articles/${id}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ action: "delete" }),
+            body: JSON.stringify({ action: "softDelete" }),
           }),
         ),
       );
@@ -133,46 +110,8 @@ export default function RecycleBinPage() {
     }
   };
 
-  const handleConfirmRestore = async () => {
-    const ids = [...selectedIds];
-    try {
-      await Promise.all(
-        ids.map((id) =>
-          fetch(`/api/articles/${id}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ action: "restore" }),
-          }),
-        ),
-      );
-      setAllArticles((prev) => prev.filter((a) => !selectedIds.has(a.id)));
-      clear();
-    } catch (error) {
-      console.error("Error restoring articles:", error);
-    } finally {
-      setShowRestorePopup(false);
-    }
-  };
-
-  const handleConfirmRestoreAll = async () => {
-    const ids = allArticles.map((a) => a.id);
-    try {
-      await Promise.all(
-        ids.map((id) =>
-          fetch(`/api/articles/${id}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ action: "restore" }),
-          }),
-        ),
-      );
-      setAllArticles([]);
-      clear();
-    } catch (error) {
-      console.error("Error restoring all articles:", error);
-    } finally {
-      setShowRestoreAllPopup(false);
-    }
+  const handleOpenArticle = (articleId) => {
+    router.push(`/views/article/${articleId}`);
   };
 
   const handleCreateArticle = async () => {
@@ -198,25 +137,24 @@ export default function RecycleBinPage() {
   return (
     <div className="bg-natural-white w-screen h-screen flex justify-between items-center">
       <SideBarGlobal
-        onMyArticles={() => router.push("/views/my_article")}
-        mode="recycle_bin"
+        onRecycleBin={() => router.push("/views/recycle_bin")}
+        onSettings={() => router.push("/views/setting")}
+        mode="my_article"
         onAddnewArticle={handleCreateArticle}
       />
-
       <ArticleWorkspace
         articles={paginatedArticles}
         loading={loading}
-        mode="recycle_bin"
+        mode="my_article"
         selectedIds={selectedIds}
         isSelectionState={isSelectionState}
         onCardSelection={handleSelection}
         onCancelLongPress={cancelLongPress}
         toggleSelectionMode={toggleSelection}
         handleDeletePopup={handleDelete}
-        handleDeleteAllPopup={handleDeleteAll}
-        handleRestoreAllPopup={handleRestoreAll}
-        handleRestorePopup={handleRestore}
         handleSelectAll={handleSelectAll}
+        onOpenArticle={handleOpenArticle}
+        onCreateArticle={handleCreateArticle}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         sortOrder={sortOrder}
@@ -225,8 +163,6 @@ export default function RecycleBinPage() {
         totalPages={totalPages}
         onPageChange={handlePageChange}
         totalCount={allArticles.length}
-        onOpenArticle={() => {}}
-        onCreateArticle={() => {}}
       />
 
       <CustomDialog
@@ -245,9 +181,9 @@ export default function RecycleBinPage() {
         onCancel={() => setShowDeletePopup(false)}
       />
 
-      <CustomDialog
+      {/* <CustomDialog
         title="Delete all articles"
-        message="Are you sure you still want to delete all items in the recycle bin?"
+        message="Are you sure you still want to delete all items?"
         isDelete={true}
         icon={
           <img
@@ -259,39 +195,7 @@ export default function RecycleBinPage() {
         isOpen={showDeleteAllPopup}
         onConfirm={handleConfirmDeleteAll}
         onCancel={() => setShowDeleteAllPopup(false)}
-      />
-
-      <CustomDialog
-        title="Recover articles"
-        message={`Are you sure you want to recover ${selectedIds.size} selected items?`}
-        isDelete={false}
-        icon={
-          <img
-            src="/assets/Folder-rafiki.svg"
-            alt="folder"
-            className="w-[85%]"
-          />
-        }
-        isOpen={showRestorePopup}
-        onConfirm={handleConfirmRestore}
-        onCancel={() => setShowRestorePopup(false)}
-      />
-
-      <CustomDialog
-        title="Recover all articles"
-        message="Are you sure you want to recover all items from the recycle bin?"
-        isDelete={false}
-        icon={
-          <img
-            src="/assets/Folder-rafiki.svg"
-            alt="folder"
-            className="w-[85%]"
-          />
-        }
-        isOpen={showRestoreAllPopup}
-        onConfirm={handleConfirmRestoreAll}
-        onCancel={() => setShowRestoreAllPopup(false)}
-      />
+      /> */}
 
       <CustomDialog
         title="Reminder"

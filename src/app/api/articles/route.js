@@ -49,7 +49,7 @@ export async function GET(req) {
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { userId, title, description, content } = body;
+    const { userId, title, description, content, overrideToneOfVoice } = body;
 
     if (!userId || !title) {
       return Response.json(
@@ -58,7 +58,13 @@ export async function POST(req) {
       );
     }
 
-    const articleId = await createArticle(userId, title, description, content);
+    const articleId = await createArticle(
+      userId,
+      title,
+      description,
+      content,
+      overrideToneOfVoice,
+    );
     return Response.json(
       { id: articleId, message: "Article created" },
       { status: 201 },

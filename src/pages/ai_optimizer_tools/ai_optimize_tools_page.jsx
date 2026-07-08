@@ -10,15 +10,14 @@ import HighlightSuggestionPanel from "./components/highlight_suggestion_panel";
 import ConfigurePanel from "./components/configure_panel";
 import { NameDialog } from "./components/name_dialog";
 import { CustomDialog } from "../components/custom_dialog.jsx";
-import { getMockArticleById } from "../../../lib/data/mocks";
-import { Article } from "../../../lib/models/article";
+import { getMockArticleById } from "../../lib/data/mocks";
+import { Article } from "../../lib/models/article";
 import {
   getOptimizedStats,
   getOriginalStats,
 } from "@/lib/utils/article_analysis_utils";
 
 import { AIRequest } from "@/lib/utils/ai_utils.js";
-import { content } from "../../../../tailwind.config";
 
 import { useRouter, useParams } from "next/navigation";
 
@@ -124,6 +123,7 @@ export default function ArticleOptimizerPage() {
     setInputText(article.content);
     setOutputText(article.optimizedContent || "");
     setScore(article.aiScore);
+    setTone(article.overrideToneOfVoice || "professional");
     setDocTitle(article.title || "Untitled");
     setDocDescription(article.description);
   }, [article]);
@@ -354,6 +354,27 @@ export default function ArticleOptimizerPage() {
     }
   };
 
+  const handleToneOfVoice = async (e) => {
+    const newTone = e.target.value;
+    setTone(newTone);
+
+    try {
+      setLoading(true);
+      await fetch(`/api/articles/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "updateTone",
+          overrideToneOfVoice: newTone,
+        }),
+      });
+    } catch (error) {
+      console.error("Error tone of voice article:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="w-screen h-screen bg-natural-white flex items-start justify-start flex-row gap-2 overflow-hidden">
       {/* sidebar */}
@@ -489,10 +510,7 @@ export default function ArticleOptimizerPage() {
                 />
               )}
               {showConfig && (
-                <ConfigurePanel
-                  tone={tone}
-                  onToneOfVoice={(e) => setTone(e.target.value)}
-                />
+                <ConfigurePanel tone={tone} onToneOfVoice={handleToneOfVoice} />
               )}
             </div>
           )}
