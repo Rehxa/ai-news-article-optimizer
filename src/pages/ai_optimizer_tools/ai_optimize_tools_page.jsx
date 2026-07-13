@@ -23,6 +23,10 @@ import { useRouter, useParams } from "next/navigation";
 
 import { useDebouncedSave } from "@/lib/hooks/useDebouncedSave.js";
 
+import { useAuth } from "@/context/auth_context";
+import { fetchWithAuth } from "@/app/api/auth/fetch_with_auth";
+import SideBarGlobal from "@/pages/components/side_bar_global";
+
 export default function ArticleOptimizerPage() {
   //params
   const { id } = useParams();
@@ -61,6 +65,17 @@ export default function ArticleOptimizerPage() {
   const [article, setArticle] = useState(null);
   const [pageLoading, setPageLoading] = useState(true);
 
+  const { user, loading: authLoading } = useAuth();
+
+  useEffect(() => {
+    if (authLoading && !user) {
+      console.log(authLoading, "and", user);
+      router.replace("/views/login");
+    }
+    // const userId = "user_001";
+    // const userId = user.uid;
+  }, [authLoading, user, router]);
+
   // const article = useMemo(
   //   () => new Article(getMockArticleById("article_001")),
   //   [],
@@ -73,12 +88,14 @@ export default function ArticleOptimizerPage() {
   //   // setOutputText(article.content);
   // }, [article]);
 
-  const userId = "user_001";
+  // const userId = "user_001";
   useEffect(() => {
     const fetchArticle = async () => {
       try {
+        const userId = user.uid;
+
         setPageLoading(true);
-        const res = await fetch(
+        const res = await fetchWithAuth(
           `/api/articles?userId=${userId}&articleId=${id}`,
         );
         const data = await res.json();
@@ -95,7 +112,7 @@ export default function ArticleOptimizerPage() {
   // Debounced save for input text changes
   useDebouncedSave(inputText, 4000, (val) => {
     if (!id) return;
-    fetch(`/api/articles/${id}`, {
+    fetchWithAuth(`/api/articles/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -107,7 +124,7 @@ export default function ArticleOptimizerPage() {
   // Debounced save for output text changes
   useDebouncedSave(outputText, 4000, (val) => {
     if (!id) return;
-    fetch(`/api/articles/${id}`, {
+    fetchWithAuth(`/api/articles/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -166,7 +183,7 @@ export default function ArticleOptimizerPage() {
       })),
     );
 
-    await fetch(`/api/articles/${id}`, {
+    await fetchWithAuth(`/api/articles/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -175,7 +192,7 @@ export default function ArticleOptimizerPage() {
         optimizedContent: rewrite,
       }),
     });
-    await fetch(`/api/articles/${id}`, {
+    await fetchWithAuth(`/api/articles/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "updateScore", aiScore: score }),
@@ -248,20 +265,13 @@ export default function ArticleOptimizerPage() {
     setLoading(false);
   };
 
-  // const handleOptimized = async () => {
-  //   setLoading(true);
-  //   const rewrite = await AIRequest.rewrite({ content: inputText, tone: tone });
-  //   setOutputText(rewrite);
-  //   setShowOptimize(true);
-  //   setLoading(false);
-  // };
   const handleOptimizedScore = async () => {
     setLoading(true);
     const score = await AIRequest.score({ content: outputText });
     console.log(score);
     setScore(score);
 
-    await fetch(`/api/articles/${id}`, {
+    await fetchWithAuth(`/api/articles/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "updateScore", aiScore: score }),
@@ -300,7 +310,7 @@ export default function ArticleOptimizerPage() {
   const handleSaveAs = async (title, description) => {
     try {
       setLoading(true);
-      await fetch(`/api/articles/${id}`, {
+      await fetchWithAuth(`/api/articles/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -321,36 +331,16 @@ export default function ArticleOptimizerPage() {
   const handleDeleteArticle = async () => {
     try {
       setLoading(true);
-      await fetch(`/api/articles/${id}`, {
+      await fetchWithAuth(`/api/articles/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "softDelete" }),
       });
-      router.push("/views/my_article");
+      router.push("/my_article");
     } catch (error) {
       console.error("Error deleting article:", error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleCreateArticle = async () => {
-    try {
-      const res = await fetch("/api/articles", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: "user_001",
-          title: "Untitled Article",
-          description: "",
-          content: "",
-        }),
-      });
-      const data = await res.json(); // { id, message }
-      console.log("Article created:", data);
-      router.push(`/views/article/${data.id}`);
-    } catch (error) {
-      console.error("Error creating article:", error);
     }
   };
 
@@ -360,7 +350,7 @@ export default function ArticleOptimizerPage() {
 
     try {
       setLoading(true);
-      await fetch(`/api/articles/${id}`, {
+      await fetchWithAuth(`/api/articles/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -375,17 +365,22 @@ export default function ArticleOptimizerPage() {
     }
   };
 
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async (text) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Copy failed:", err);
+    }
+  };
+
   return (
     <div className="w-screen h-screen bg-natural-white flex items-start justify-start flex-row gap-2 overflow-hidden">
       {/* sidebar */}
-      <Sidebar
-        onToggle={{
-          myArticles: () => router.push("/views/my_article"),
-          recycleBin: () => router.push("/views/recycle_bin"),
-          settings: () => router.push("/views/settings"),
-          addNewArticle: () => handleCreateArticle(),
-        }}
-      />
+      <SideBarGlobal mode={"article"} />
       {/* main content */}
       <div className="w-full h-full flex flex-col p-2 gap-2">
         {/* toolbar - Fixed text margins for alignment */}
@@ -479,6 +474,8 @@ export default function ArticleOptimizerPage() {
               selection={selection}
               setEditorActions={setEditorActions}
               onSelectiveReOpimized={handleOptimizedSuggestion}
+              onCopy={handleCopy}
+              copied={copied}
             />
           )}
           {showSidebar && (

@@ -24,6 +24,8 @@ export default function OutputPanel({
   selection,
   setEditorActions,
   onSelectiveReOpimized,
+  onCopy,
+  copied,
 }) {
   const [headingOpen, setHeadingOpen] = useState(false);
 
@@ -213,10 +215,10 @@ export default function OutputPanel({
     { type: "divider" },
     {
       type: "button",
-      icon: "content_copy",
+      icon: copied ? "check" : "content_copy",
       title: "Copy",
       active: false,
-      onClick: () => {},
+      onClick: () => onCopy(selection.text),
     },
     {
       type: "button",
@@ -374,8 +376,11 @@ export default function OutputPanel({
           }
         })}
         <ToolbarDivider /> */}
-        <button className="material-symbols-outlined text-primary-blue hover:opacity-70">
-          content_copy
+        <button
+          onClick={() => onCopy(value)}
+          className="material-symbols-outlined text-primary-blue hover:opacity-70"
+        >
+          {copied ? "check" : "content_copy"}
         </button>
         <button
           onClick={onReOpimized}

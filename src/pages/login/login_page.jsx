@@ -1,9 +1,50 @@
 "use client";
 import AuthLayout from "@/pages/components/auth_layout";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/auth_context";
+
+import { login, loginWithGoogle } from "@/lib/services/auth/auth_service.js";
+import { useState, useEffect } from "react";
 
 export default function LoginPage() {
   const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const { user, loading: authLoading } = useAuth();
+
+  useEffect(() => {
+    //? after sign up need user to login, but it seem this check if user login or not.
+    if (!authLoading && user) {
+      router.replace("/my_article");
+    }
+  }, [authLoading, user, router]);
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      await login(email, password);
+      router.replace("/my_article");
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setSubmitting(true);
+    try {
+      await loginWithGoogle();
+      router.replace("/my_article");
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <AuthLayout
       image={"/assets/Computer-login-amico.svg"}
@@ -23,6 +64,8 @@ export default function LoginPage() {
                 </span>
 
                 <input
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   type="email"
                   placeholder="Email"
                   className="w-full bg-transparent text-sm outline-none placeholder:text-gray-400"
@@ -36,6 +79,8 @@ export default function LoginPage() {
                 </span>
 
                 <input
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   type="password"
                   placeholder="Password"
                   className="w-full bg-transparent text-sm outline-none placeholder:text-gray-400"
@@ -43,8 +88,11 @@ export default function LoginPage() {
               </div>
 
               {/* Login Button */}
-              <button className="mb-5 h-11 w-full rounded-full bg-primary-blue font-semibold text-white shadow transition hover:brightness-110 cursor-pointer">
-                Login
+              <button
+                onClick={handleLogin}
+                className="mb-5 h-11 w-full rounded-full bg-primary-blue font-semibold text-white shadow transition hover:brightness-110 cursor-pointer"
+              >
+                {submitting ? "Login in ..." : "Login"}
               </button>
 
               {/* Links */}
@@ -72,7 +120,10 @@ export default function LoginPage() {
             <p className="mt-6 mb-3.5 text-center text-gray-600">Or</p>
 
             {/* Google Login */}
-            <button className="flex h-12 w-full items-center justify-center gap-3 rounded-full bg-natural-grey-blue shadow transition hover:bg-[#d6e8fb] cursor-pointer z-10">
+            <button
+              onClick={handleGoogleSignIn}
+              className="flex h-12 w-full items-center justify-center gap-3 rounded-full bg-natural-grey-blue shadow transition hover:bg-[#d6e8fb] cursor-pointer z-10"
+            >
               <img
                 src={"/assets/Google-logo.svg"}
                 alt="Google"

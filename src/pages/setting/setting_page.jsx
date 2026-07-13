@@ -7,6 +7,13 @@ import ActionButton from "@/pages/components/action_button.jsx";
 import { CustomDialog } from "@/pages/components/custom_dialog.jsx";
 import { PasswordDialog } from "@/pages/setting/components/reset_password_dialog";
 import { User } from "@/lib/models";
+import { useAuth } from "@/context/auth_context";
+import { fetchWithAuth } from "@/app/api/auth/fetch_with_auth";
+import {
+  logout,
+  changePassword,
+  deleteAccount,
+} from "@/lib/services/auth/auth_service.js";
 
 export default function SettingPage() {
   const router = useRouter();
@@ -22,13 +29,27 @@ export default function SettingPage() {
   const [setting, setSetting] = useState(null);
   const [tone, setTone] = useState("");
   const [email, setEmail] = useState("");
-  const userId = "user_001";
+
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
+
+  const { user, loading: authLoading } = useAuth();
+
+  useEffect(() => {
+    if (authLoading && !user) {
+      console.log(authLoading, "and", user);
+      router.replace("/views/login");
+    }
+    // const userId = "user_001";
+    // const userId = user.uid;
+  }, [authLoading, user, router]);
 
   useEffect(() => {
     const fetchSetting = async () => {
       try {
         setPageLoading(true);
-        const res = await fetch(`/api/users/${userId}`);
+        const res = await fetchWithAuth(`/api/users/${user.uid}`);
         if (!res.ok) throw new Error("Failed to fetch user");
         const data = await res.json();
         setSetting(new User(data));
@@ -39,8 +60,8 @@ export default function SettingPage() {
         setPageLoading(false);
       }
     };
-    if (userId) fetchSetting();
-  }, [userId]);
+    if (user.uid) fetchSetting();
+  }, [user.uid]);
 
   useEffect(() => {
     if (!setting) return;
@@ -48,43 +69,13 @@ export default function SettingPage() {
     setEmail(setting.email);
   }, [setting]);
 
-  const handleCreateArticle = async () => {
-    try {
-      const userId = "user_001";
-
-      // Fetch the user's default tone first
-      const userRes = await fetch(`/api/users/${userId}`);
-      if (!userRes.ok) throw new Error("Failed to fetch user");
-      const user = await userRes.json();
-      console.log("User", user);
-
-      const res = await fetch("/api/articles", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId,
-          title: "Untitled Article",
-          description: "",
-          content: "",
-          overrideToneOfVoice: user.toneOfVoice,
-        }),
-      });
-      if (!res.ok) throw new Error("Failed to create article");
-
-      const data = await res.json(); // { id, message }
-      console.log("Article created:", data);
-      router.push(`/views/article/${data.id}`);
-    } catch (error) {
-      console.error("Error creating article:", error);
-    }
-  };
-
   const handleToneOfVoice = async (e) => {
     const newTone = e.target.value;
     setTone(newTone);
+    const userId = user.uid;
     try {
       setLoading(true);
-      await fetch(`/api/users/${userId}`, {
+      await fetchWithAuth(`/api/users/${userId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -98,20 +89,115 @@ export default function SettingPage() {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.push("/login");
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+  };
+
   // todo need auth
-  const handleConfirmDeleteAccount = () => {};
-  const handleConfirmDeleteHistory = () => {};
-  const handleConfirmLogout = () => {};
-  const handleResetPassword = () => {};
+  const handleConfirmDeleteAccount = async () => {
+    setError(null);
+    setLoading(true);
+
+    try {
+      await deleteAccount(password); // password is null/undefined for Google users, fine either way
+      await logout(); // clear local auth state
+      router.push("/login"); // or wherever you want to land post-deletion
+    } catch (error) {
+      console.error("Error deleting account:", error);
+
+      switch (error.code) {
+        case "auth/wrong-password":
+        case "auth/invalid-credential":
+          setError("Your password is incorrect.");
+          break;
+        case "auth/requires-recent-login":
+          setError("Please log in again before deleting your account.");
+          break;
+        case "auth/popup-closed-by-user":
+          setError("Google confirmation was cancelled.");
+          break;
+        case "auth/too-many-requests":
+          setError("Too many attempts. Please try again later.");
+          break;
+        default:
+          setError(
+            error.message || "Failed to delete account. Please try again.",
+          );
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleConfirmDeleteHistory = async () => {
+    setError(null);
+    setLoading(true);
+    try {
+      const res = await fetchWithAuth(`/api/users/${user.uid}/articles`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to clear history.");
+      }
+
+      setShowDeleteHistoryPopup(false);
+      // if the current page displays article lists, trigger a refetch here
+    } catch (error) {
+      console.error("Error clearing history:", error);
+      setError(error.message || "Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (oldPass, newPass, confirmPass) => {
+    setError(null);
+
+    if (!oldPass || !newPass || !confirmPass) {
+      setError("Please fill in all fields.");
+      return;
+    }
+    if (newPass !== confirmPass) {
+      setError("Passwords don't match.");
+      return;
+    }
+    try {
+      await changePassword(oldPass, newPass);
+    } catch (error) {
+      switch (error.code) {
+        case "auth/invalid-credential":
+        case "auth/wrong-password":
+          setError("Current password is incorrect.");
+          break;
+
+        case "auth/weak-password":
+          setError("New password is too weak.");
+          break;
+
+        case "auth/requires-recent-login":
+          setError("Please sign in again and try changing your password.");
+          break;
+
+        default:
+          setError(error.message);
+      }
+
+      console.error(error);
+    } finally {
+      setShowPasswordPopup(false);
+    }
+  };
 
   return (
     <div className="bg-natural-white w-screen h-screen flex justify-between items-center">
-      <SideBarGlobal
-        onMyArticles={() => router.push("/views/my_article")}
-        onRecycleBin={() => router.push("/views/recycle_bin")}
-        mode="settings"
-        onAddnewArticle={handleCreateArticle}
-      />
+      <SideBarGlobal mode="settings" />
 
       <div className="w-full h-screen flex flex-col justify-start p-5 gap-5 bg-natural-grey-blue">
         {/* Title */}
@@ -205,13 +291,23 @@ export default function SettingPage() {
         message="This action will lead to account deleted with no recovery. Are you sure you still want to delete it?"
         isDelete={true}
         icon={
-          <div className="material-symbols-rounded text-accent-red !text-7xl !font-bold">
-            delete
+          <div className="w-full flex flex-row justify-between items-center gap-4">
+            <div className="material-symbols-rounded text-accent-red !text-7xl !font-bold">
+              delete
+            </div>
+            <input
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              type="password"
+              placeholder="Password required"
+              className="border-1 border-accent-red rounded-lg p-2 w-full focus:border-2 focus:border-accent-red focus:outline-none h-10"
+            />
           </div>
         }
         isOpen={showDeleteAccountPopup}
         onConfirm={handleConfirmDeleteAccount}
         onCancel={() => setShowDeleteAccountPopup(false)}
+        isLogOut={true}
       />
 
       <CustomDialog
@@ -240,14 +336,16 @@ export default function SettingPage() {
           />
         }
         isOpen={showLogoutPopup}
-        onConfirm={handleConfirmLogout}
+        onConfirm={handleLogout}
         onCancel={() => setShowLogoutPopup(false)}
         isLogOut={true}
       />
 
       <PasswordDialog
         isOpen={showPasswordPopup}
-        onConfirm={handleResetPassword}
+        onConfirm={(oldPwd, newPwd, confirmPwd) =>
+          handleResetPassword(oldPwd, newPwd, confirmPwd)
+        }
         onCancel={() => setShowPasswordPopup(false)}
       />
     </div>

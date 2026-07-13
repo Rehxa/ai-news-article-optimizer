@@ -2,9 +2,48 @@
 
 import AuthLayout from "@/pages/components/auth_layout";
 import { useRouter } from "next/navigation";
+import { register, loginWithGoogle } from "@/lib/services/auth/auth_service.js";
+import { useState } from "react";
 
 export default function SignPage() {
   const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSignUp = async (e) => {
+    e.preventDefault();
+    if (password !== confirmPassword) {
+      setError("Passwords don't match.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await register(email, password);
+      router.push("/views/login");
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setError("");
+    setSubmitting(true);
+    try {
+      await loginWithGoogle();
+      router.replace("/my_article");
+    } catch (err) {
+      setError("Unable to sign in with google");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <AuthLayout
       image={"/assets/Tablet-login-amico.svg"}
@@ -24,6 +63,8 @@ export default function SignPage() {
                 </span>
 
                 <input
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   type="email"
                   placeholder="Email"
                   className="w-full bg-transparent text-sm outline-none placeholder:text-gray-400"
@@ -37,6 +78,8 @@ export default function SignPage() {
                 </span>
 
                 <input
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   type="password"
                   placeholder="Password"
                   className="w-full bg-transparent text-sm outline-none placeholder:text-gray-400"
@@ -49,14 +92,19 @@ export default function SignPage() {
                 </span>
 
                 <input
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                   type="password"
-                  placeholder="Password"
+                  placeholder="Re-enter password"
                   className="w-full bg-transparent text-sm outline-none placeholder:text-gray-400"
                 />
               </div>
 
               {/* Sign up Button */}
-              <button className="mb-5 h-11 w-full rounded-full bg-primary-blue font-semibold text-white shadow transition hover:brightness-110 cursor-pointer">
+              <button
+                onClick={handleSignUp}
+                className="mb-5 h-11 w-full rounded-full bg-primary-blue font-semibold text-white shadow transition hover:brightness-110 cursor-pointer"
+              >
                 Sign up
               </button>
 
@@ -78,7 +126,10 @@ export default function SignPage() {
             <p className="mt-3.5 mb-3.5 text-center text-gray-600">Or</p>
 
             {/* Google Login */}
-            <button className="flex h-12 w-full items-center justify-center gap-3 rounded-full bg-natural-grey-blue shadow transition hover:bg-[#d6e8fb] cursor-pointer z-10">
+            <button
+              onClick={handleGoogleSignIn}
+              className="flex h-12 w-full items-center justify-center gap-3 rounded-full bg-natural-grey-blue shadow transition hover:bg-[#d6e8fb] cursor-pointer z-10"
+            >
               <img
                 src={"/assets/Google-logo.svg"}
                 alt="Google"

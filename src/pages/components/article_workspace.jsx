@@ -1,4 +1,3 @@
-// lib/components/ArticleWorkspace.jsx
 import SideBarGlobal from "@/pages/components/side_bar_global";
 import ArticleCard from "@/pages/components/article_card";
 import AddNewCard from "@/pages/components/add_new_card";
@@ -41,7 +40,7 @@ export function ArticleWorkspace({
   return (
     <>
       {/* Side Bar */}
-      {/* <SideBarGlobal /> */}
+      <SideBarGlobal mode={mode} />
       <div className="w-full h-screen flex flex-col justify-start p-5 gap-5 bg-natural-grey-blue">
         {/* Title */}
         <h1 className="font-bold text-5xl">

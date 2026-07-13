@@ -11,7 +11,7 @@ import {
   updateDoc,
   Timestamp,
 } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db } from "@/lib/firebase/client";
 import { Setting } from "@/lib/models/setting.js";
 
 const SETTING_COLLECTION = "settings";

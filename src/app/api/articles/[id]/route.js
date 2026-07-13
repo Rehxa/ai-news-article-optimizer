@@ -12,9 +12,14 @@ import {
   restoreArticle,
   deleteArticle,
 } from "@/lib/services/firestore";
+import { verifyFirebaseToken } from "@/lib/firebase/verifyFirebaseToken";
 
 export async function PATCH(req, { params }) {
   try {
+    const { user, error, status } = await verifyFirebaseToken(req);
+    if (error) {
+      return Response.json({ error }, { status });
+    }
     const { id } = await params;
     const body = await req.json();
     const { action, ...updates } = body;

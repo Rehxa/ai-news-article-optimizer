@@ -9,9 +9,13 @@ import {
   createArticle,
   getBinArticles,
 } from "@/lib/services/firestore";
-
+import { verifyFirebaseToken } from "@/lib/firebase/verifyFirebaseToken";
 export async function GET(req) {
   try {
+    const { user, error, status } = await verifyFirebaseToken(req);
+    if (error) {
+      return Response.json({ error }, { status });
+    }
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get("userId");
     const articleId = searchParams.get("articleId");
@@ -19,6 +23,10 @@ export async function GET(req) {
 
     if (!userId) {
       return Response.json({ error: "userId is required" }, { status: 400 });
+    }
+
+    if (user.uid !== userId) {
+      return Response.json({ error: "Forbidden" }, { status: 403 });
     }
 
     // Get single article
@@ -48,6 +56,10 @@ export async function GET(req) {
 
 export async function POST(req) {
   try {
+    const { user, error, status } = await verifyFirebaseToken(req);
+    if (error) {
+      return Response.json({ error }, { status });
+    }
     const body = await req.json();
     const { userId, title, description, content, overrideToneOfVoice } = body;
 

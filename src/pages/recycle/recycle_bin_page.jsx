@@ -2,10 +2,11 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { CustomDialog } from "@/pages/components/custom_dialog.jsx";
-import SideBarGlobal from "@/pages/components/side_bar_global.jsx";
 import { ArticleWorkspace } from "@/pages/components/article_workspace";
 import { useMultiSelect } from "@/lib/hooks/useMultiSelect";
 import { useArticleListControls } from "@/lib/hooks/useArticleListControls";
+import { useAuth } from "@/context/auth_context";
+import { fetchWithAuth } from "@/app/api/auth/fetch_with_auth";
 
 export default function RecycleBinPage() {
   const router = useRouter();
@@ -39,13 +40,25 @@ export default function RecycleBinPage() {
     handlePageChange,
   } = useArticleListControls(allArticles);
 
-  const userId = "user_001";
+  // const userId = "user_001";
+  const { user, loading: authLoading } = useAuth();
+
+  useEffect(() => {
+    if (authLoading && !user) {
+      console.log(authLoading, "and", user);
+      router.replace("/views/login");
+    }
+    // const userId = "user_001";
+    // const userId = user.uid;
+  }, [authLoading, user, router]);
 
   useEffect(() => {
     const fetchArticles = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`/api/articles?userId=${userId}&bin=true`);
+        const res = await fetchWithAuth(
+          `/api/articles?userId=${user.uid}&bin=true`,
+        );
         const data = await res.json();
         setAllArticles(data);
         console.log(
@@ -65,7 +78,7 @@ export default function RecycleBinPage() {
     };
 
     fetchArticles();
-  }, [userId]);
+  }, [user.uid]);
 
   const handleRestore = () => {
     if (selectedIds.size === 0) {
@@ -96,7 +109,7 @@ export default function RecycleBinPage() {
     try {
       await Promise.all(
         ids.map((id) =>
-          fetch(`/api/articles/${id}`, {
+          fetchWithAuth(`/api/articles/${id}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ action: "delete" }),
@@ -117,7 +130,7 @@ export default function RecycleBinPage() {
     try {
       await Promise.all(
         ids.map((id) =>
-          fetch(`/api/articles/${id}`, {
+          fetchWithAuth(`/api/articles/${id}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ action: "delete" }),
@@ -138,7 +151,7 @@ export default function RecycleBinPage() {
     try {
       await Promise.all(
         ids.map((id) =>
-          fetch(`/api/articles/${id}`, {
+          fetchWithAuth(`/api/articles/${id}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ action: "restore" }),
@@ -159,7 +172,7 @@ export default function RecycleBinPage() {
     try {
       await Promise.all(
         ids.map((id) =>
-          fetch(`/api/articles/${id}`, {
+          fetchWithAuth(`/api/articles/${id}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ action: "restore" }),
@@ -175,35 +188,8 @@ export default function RecycleBinPage() {
     }
   };
 
-  const handleCreateArticle = async () => {
-    try {
-      const res = await fetch("/api/articles", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: "user_001",
-          title: "Untitled Article",
-          description: "",
-          content: "",
-        }),
-      });
-      const data = await res.json(); // { id, message }
-      console.log("Article created:", data);
-      router.push(`/views/article/${data.id}`);
-    } catch (error) {
-      console.error("Error creating article:", error);
-    }
-  };
-
   return (
     <div className="bg-natural-white w-screen h-screen flex justify-between items-center">
-      <SideBarGlobal
-        onMyArticles={() => router.push("/views/my_article")}
-        onSettings={() => router.push("/views/setting")}
-        mode="recycle_bin"
-        onAddnewArticle={handleCreateArticle}
-      />
-
       <ArticleWorkspace
         articles={paginatedArticles}
         loading={loading}

@@ -1,11 +1,12 @@
 "use client";
 import { useState, useEffect } from "react";
 import { CustomDialog } from "@/pages/components/custom_dialog.jsx";
-import SideBarGlobal from "@/pages/components/side_bar_global.jsx";
 import { ArticleWorkspace } from "@/pages/components/article_workspace";
 import { useMultiSelect } from "@/lib/hooks/useMultiSelect";
 import { useArticleListControls } from "@/lib/hooks/useArticleListControls";
 import { useRouter } from "next/navigation";
+import { fetchWithAuth } from "@/app/api/auth/fetch_with_auth";
+import { useAuth } from "@/context/auth_context";
 
 export default function MyArticlePage() {
   const router = useRouter();
@@ -36,13 +37,21 @@ export default function MyArticlePage() {
     handlePageChange,
   } = useArticleListControls(allArticles);
 
-  const userId = "user_001";
+  const { user, loading: authLoading } = useAuth();
+
+  useEffect(() => {
+    if (authLoading && !user) {
+      // console.log(authLoading, "and", user);
+      router.replace("/views/login");
+    }
+  }, [authLoading, user, router]);
 
   useEffect(() => {
     const fetchArticles = async () => {
       try {
+        console.log(authLoading, "and", user);
         setLoading(true);
-        const res = await fetch(`/api/articles?userId=${userId}`);
+        const res = await fetchWithAuth(`/api/articles?userId=${user.uid}`);
         const data = await res.json();
         console.log("[STEP 3 - CLIENT RAW DATA]", data);
         setAllArticles(data);
@@ -54,7 +63,7 @@ export default function MyArticlePage() {
     };
 
     fetchArticles();
-  }, [userId]);
+  }, [user.uid]);
 
   const handleDelete = async () => {
     if (selectedIds.size === 0) {
@@ -73,7 +82,7 @@ export default function MyArticlePage() {
     try {
       await Promise.all(
         ids.map((id) =>
-          fetch(`/api/articles/${id}`, {
+          fetchWithAuth(`/api/articles/${id}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ action: "softDelete" }),
@@ -89,46 +98,36 @@ export default function MyArticlePage() {
     }
   };
 
-  const handleConfirmDeleteAll = async () => {
-    const ids = allArticles.map((a) => a.id);
-    try {
-      await Promise.all(
-        ids.map((id) =>
-          fetch(`/api/articles/${id}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ action: "softDelete" }),
-          }),
-        ),
-      );
-      setAllArticles([]);
-      clear();
-    } catch (error) {
-      console.error("Error deleting all articles:", error);
-    } finally {
-      setShowDeleteAllPopup(false);
-    }
-  };
-
   const handleOpenArticle = (articleId) => {
-    router.push(`/views/article/${articleId}`);
+    router.push(`/article/${articleId}`);
   };
 
   const handleCreateArticle = async () => {
     try {
-      const res = await fetch("/api/articles", {
+      const userId = user.uid;
+
+      // Fetch the user's default tone first
+      const userRes = await fetchWithAuth(`/api/users/${userId}`);
+      if (!userRes.ok) throw new Error("Failed to fetch user");
+      const userData = await userRes.json();
+      // console.log("User", userData);
+
+      const res = await fetchWithAuth("/api/articles", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId: "user_001",
+          userId,
           title: "Untitled Article",
           description: "",
           content: "",
+          overrideToneOfVoice: userData.toneOfVoice,
         }),
       });
+      if (!res.ok) throw new Error("Failed to create article");
+
       const data = await res.json(); // { id, message }
       console.log("Article created:", data);
-      router.push(`/views/article/${data.id}`);
+      router.push(`/article/${data.id}`);
     } catch (error) {
       console.error("Error creating article:", error);
     }
@@ -136,12 +135,6 @@ export default function MyArticlePage() {
 
   return (
     <div className="bg-natural-white w-screen h-screen flex justify-between items-center">
-      <SideBarGlobal
-        onRecycleBin={() => router.push("/views/recycle_bin")}
-        onSettings={() => router.push("/views/setting")}
-        mode="my_article"
-        onAddnewArticle={handleCreateArticle}
-      />
       <ArticleWorkspace
         articles={paginatedArticles}
         loading={loading}
@@ -180,22 +173,6 @@ export default function MyArticlePage() {
         onConfirm={handleConfirmDelete}
         onCancel={() => setShowDeletePopup(false)}
       />
-
-      {/* <CustomDialog
-        title="Delete all articles"
-        message="Are you sure you still want to delete all items?"
-        isDelete={true}
-        icon={
-          <img
-            src="/assets/Inbox-cleanup-rafiki.svg"
-            alt="Inbox-cleanup"
-            className="w-[85%]"
-          />
-        }
-        isOpen={showDeleteAllPopup}
-        onConfirm={handleConfirmDeleteAll}
-        onCancel={() => setShowDeleteAllPopup(false)}
-      /> */}
 
       <CustomDialog
         title="Reminder"

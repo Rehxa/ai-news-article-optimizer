@@ -1,5 +1,11 @@
+"use client";
+import { useState } from "react";
+
 export function PasswordDialog({ onConfirm, onCancel, isOpen = true }) {
   if (!isOpen) return null;
+  const [draftOldPassword, setDraftOldPassword] = useState("");
+  const [draftNewPassword, setDraftNewPassword] = useState("");
+  const [draftReEnterPassword, setDraftReEnterPassword] = useState("");
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -29,25 +35,25 @@ export function PasswordDialog({ onConfirm, onCancel, isOpen = true }) {
           <div className="bg-natural-grey-blue grow h-[30%] rounded-2xl flex flex-col items-start justify-between gap-4 p-6">
             <h3 className="font-bold">Password</h3>
             <input
-              type="text"
+              type="password"
               placeholder="Enter old password"
               className="border-1 border-primary-blue bg-natural-white rounded-lg p-2 w-full focus:border-2 focus:border-primary-blue focus:outline-none"
-              // onChange={(e) => setDraftTitle(e.target.value)}
-              // value={draftTitle}
+              onChange={(e) => setDraftOldPassword(e.target.value)}
+              value={draftOldPassword}
             />
             <input
-              type="text"
+              type="password"
               placeholder="Enter new password"
               className="border-1 border-primary-blue bg-natural-white rounded-lg p-2 w-full focus:border-2 focus:border-primary-blue focus:outline-none"
-              // onChange={(e) => setDraftTitle(e.target.value)}
-              // value={draftTitle}
+              onChange={(e) => setDraftNewPassword(e.target.value)}
+              value={draftNewPassword}
             />
             <input
-              type="text"
+              type="password"
               placeholder="Re-enter new password"
               className="border-1 border-primary-blue bg-natural-white rounded-lg p-2 w-full focus:border-2 focus:border-primary-blue focus:outline-none"
-              // onChange={(e) => setDraftTitle(e.target.value)}
-              // value={draftTitle}
+              onChange={(e) => setDraftReEnterPassword(e.target.value)}
+              value={draftReEnterPassword}
             />
           </div>
         </div>
@@ -64,7 +70,13 @@ export function PasswordDialog({ onConfirm, onCancel, isOpen = true }) {
             Cancel
           </button>
           <button
-            onClick={onConfirm}
+            onClick={() =>
+              onConfirm(
+                draftOldPassword,
+                draftNewPassword,
+                draftReEnterPassword,
+              )
+            }
             className="px-6 py-2: bg-primary-blue text-natural-white font-bold rounded-full hover:opacity-50 transition"
           >
             Confirm
