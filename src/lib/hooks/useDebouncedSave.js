@@ -9,11 +9,7 @@ export function useDebouncedSave(value, delay, saveFn) {
       isFirstRun.current = false;
       return;
     }
-    // const timer = setTimeout(() => saveFn(value), delay);
 
-    // console.log(
-    //   `[useDebouncedSave] Debounced save triggered for value: ${value}`,
-    // );
     const timer = setTimeout(() => {
       console.log(`[useDebouncedSave] Saving after ${delay}ms:`, value);
 

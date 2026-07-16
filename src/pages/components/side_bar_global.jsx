@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth_context";
 import { fetchWithAuth } from "@/app/api/auth/fetch_with_auth";
 import { logout } from "@/lib/services/auth/auth_service.js";
+import UserAvatar from "@/pages/components/avatar";
 
 export default function SideBarGlobal({ mode }) {
   const router = useRouter();
@@ -62,9 +63,10 @@ export default function SideBarGlobal({ mode }) {
       <div className="w-[4vw] h-full bg-primary-blue flex flex-col items-center justify-between px-4 py-4">
         {/* Top Section: Profile + Navigation items */}
         <div className="flex flex-col items-center justify-start gap-8 w-full">
-          <div className="material-symbols-outlined text-natural-white text-2xl">
+          {/* <div className="material-symbols-outlined text-natural-white text-2xl">
             account_circle
-          </div>
+          </div> */}
+          <UserAvatar user={user} size={36} />
 
           <div className="flex flex-col items-center justify-start gap-3 w-full">
             {/* quick start menu */}
@@ -114,11 +116,8 @@ export default function SideBarGlobal({ mode }) {
       <div className="w-[17vw] h-screen bg-primary-blue flex flex-col items-center p-4 gap-4">
         {/* Profile Section */}
         <div className="flex flex-col items-center gap-4">
-          <img
-            src="/assets/profile.svg"
-            alt="profile"
-            className="w-15 h-15 rounded-full"
-          />
+          <UserAvatar user={user} size={50} />
+
           <h3 className="text-xs font-bold text-white">{user.email}</h3>
         </div>
 

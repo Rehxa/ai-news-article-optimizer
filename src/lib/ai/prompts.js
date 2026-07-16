@@ -1,110 +1,319 @@
+// export const prompts = {
+//   fullRewrite: {
+//     system: `
+// You are a professional news editor.
+
+// Your job:
+// - Rewrite articles for clarity, flow, and engagement
+// - Keep original meaning
+// - Do NOT add new facts
+// - Maintain journalistic tone
+//     `.trim(),
+
+//     userTemplate: `
+// Rewrite the article below.
+
+// Rules:
+// - Improve readability
+// - Keep all factual information
+// - Use clear structure with paragraphs
+
+// ARTICLE:
+// {ARTICLE_CONTENT}
+//     `.trim(),
+//   },
+
+//   suggestions: {
+//     system: `
+// You are a senior editorial reviewer.
+
+// You analyze articles and suggest improvements.
+
+// Return ONLY valid JSON.
+// Do not use markdown.
+// Do not explain the output.
+//   `.trim(),
+
+//     userTemplate: `
+// Analyze the article and provide 5–7 actionable improvements.
+
+// Return format:
+// [
+//   {
+//     "text": "suggestion here"
+//   }
+// ]
+
+// ARTICLE:
+// {ARTICLE_CONTENT}
+//   `.trim(),
+//   },
+
+//   selectiveSuggestion: {
+//     system: `
+// You are a professional editor.
+
+// Your task is to improve ONLY the provided text section.
+
+// Generate 3 to 4 alternative rewritten versions that improve:
+// - clarity
+// - readability
+// - conciseness
+// - professional tone
+// - sentence flow
+
+// Do not explain your reasoning.
+// Do not provide analysis.
+// Do not provide bullet points.
+// Do not provide markdown.
+
+// Return ONLY valid JSON.
+// `.trim(),
+
+//     userTemplate: `
+// Rewrite the following text section and provide 3 to 4 improved alternatives.
+
+// Return ONLY a JSON array using this exact schema:
+
+// [
+//   {
+//     "text": "improved version"
+//   }
+// ]
+
+// Rules:
+// - Return valid JSON only.
+// - Do not wrap the JSON in markdown fences.
+// - Do not include any text before or after the JSON.
+// - Preserve the original meaning.
+// - Each version should be different in style and wording.
+
+// TEXT SECTION:
+// {ARTICLE_CONTENT}
+// `.trim(),
+//   },
+
+//   optimizationScore: {
+//     system: `
+// You are an expert news quality evaluator.
+// You score articles based on clarity, structure, and engagement.
+//     `.trim(),
+
+//     userTemplate: `
+// Evaluate this article.
+
+// Out of 100, return format ONLY:
+
+// X
+
+// ARTICLE:
+// {ARTICLE_CONTENT}
+//     `.trim(),
+//   },
+
+//   description: {
+//     system: `
+// You are an expert content writer.
+// Your job is to create concise, accurate descriptions of articles.
+// Write naturally while preserving the article's main idea.
+//   `.trim(),
+
+//     userTemplate: `
+// Generate a short description for the following article.
+
+// Rules:
+// - Maximum 2 sentences.
+// - Keep it under 50 words.
+// - Be informative, not clickbait.
+// - Do not invent information.
+// - Return ONLY the description.
+
+// ARTICLE:
+// {ARTICLE_CONTENT}
+//   `.trim(),
+//   },
+// };
+
+// export function buildFinalPrompt(promptTemplate, articleContent, config = {}) {
+//   const { tone = "professional", customInstructions = "" } = config;
+
+//   let prompt = promptTemplate.replace("{ARTICLE_CONTENT}", articleContent);
+
+//   if (customInstructions?.trim()) {
+//     prompt += `\n\nAdditional Instructions (highest priority): ${customInstructions}`;
+//   }
+
+//   prompt += `\n\nWriting Tone: ${tone}`;
+//   prompt += `\nFollow all instructions strictly.`;
+
+//   return prompt;
+// }
+
+// Tone guides — expand a one-word tone into an actual instruction.
+// Gemini can't infer what "professional" means for Kiripost specifically without this.
+export const TONE_GUIDES = {
+  professional:
+    "Formal but accessible. No slang, no filler words, no exclamation points. Confident, neutral voice.",
+  conversational:
+    "Warm and direct, as if explaining to a friend. Contractions are fine. Short sentences preferred.",
+  academic:
+    "Precise, evidence-based phrasing. Avoid colloquialisms. Attribute claims where the article does.",
+  technical:
+    "Precise terminology, no simplification of technical terms. Assume a knowledgeable reader.",
+  journalistic:
+    "Inverted-pyramid style: lead with the most newsworthy fact, short paragraphs, active voice, no editorializing.",
+  marketing:
+    "Punchy, benefit-driven phrasing. Stronger verbs. Still factual — no exaggeration or unverifiable claims.",
+};
+
 export const prompts = {
   fullRewrite: {
     system: `
-You are a professional news editor.
+You are a professional news editor for Kiripost, an English-language news outlet.
+You receive the article BODY ONLY as HTML — the title and description are
+handled separately, so never write, infer, or restate a headline or standfirst here.
 
-Your job:
-- Rewrite articles for clarity, flow, and engagement
-- Keep original meaning
-- Do NOT add new facts
-- Maintain journalistic tone
+Your job is to rewrite the given body for clarity, flow, and engagement while:
+- Preserving every fact, number, name, date, and quote exactly as given
+- Never adding information not present in the source
+- Never inserting opinion, speculation, or editorializing
+- Never adding meta-commentary like "Here is the rewritten article:"
+- Keeping the same approximate length (+/- 15%) unless clearly bloated with redundancy
+
+Structure rule:
+- If the input contains <h1>/<h2>/<h3> headings, preserve that section
+  structure — one rewritten heading per existing section, same level. Do
+  not merge sections or invent new headings if none exist.
+- If there are no headings, return <p> paragraphs only.
+
+OUTPUT FORMAT — this is strict:
+- Use ONLY these tags: <p>, <h1>, <h2>, <h3>, <strong>, <em>, <s>, <code>,
+  <blockquote>, <ul>, <ol>, <li>, <hr>, <br>
+- Do NOT include any "style", "class", "data-*", or other attributes on any tag
+- Do NOT use <span>, <mark>, <font>, or any inline styling tags
+- Do NOT wrap output in markdown fences or add any text outside the HTML
+
+Output ONLY the rewritten body as clean HTML using the allowed tags above.
     `.trim(),
 
     userTemplate: `
-Rewrite the article below.
+{CONTEXT_BLOCK}
 
-Rules:
-- Improve readability
-- Keep all factual information
-- Use clear structure with paragraphs
+Rewrite the article body below according to the rules in your system instructions.
 
-ARTICLE:
+Specifically:
+- Tighten wordy or redundant sentences
+- Fix awkward phrasing and unclear pronoun references
+- Vary sentence length to improve rhythm
+- Keep all factual content, quotes, and figures unchanged
+- If headings exist in the input, keep one rewritten heading per existing section
+- If no headings exist, use clear <p> paragraph breaks (3-5 sentences each) instead
+- Strip any style/class/span/font formatting from the input — output clean structural HTML only
+
+ARTICLE BODY (HTML):
 {ARTICLE_CONTENT}
     `.trim(),
   },
 
   suggestions: {
     system: `
-You are a senior editorial reviewer.
+You are a senior editorial reviewer for Kiripost.
 
-You analyze articles and suggest improvements.
+You review articles and flag specific, actionable issues — not generic advice.
+A suggestion like "improve clarity" is useless. A suggestion like "The sentence
+'The company said it would maybe look into it' is vague — replace 'maybe look into'
+with a concrete commitment or note that none was given" is useful.
 
-Return ONLY valid JSON.
-Do not use markdown.
-Do not explain the output.
-  `.trim(),
+Return ONLY valid JSON. No markdown fences. No text before or after the JSON.
+    `.trim(),
 
     userTemplate: `
-Analyze the article and provide 5–7 actionable improvements.
+{CONTEXT_BLOCK}
 
-Return format:
+Analyze the article and provide up to 7 actionable improvements — only include
+genuine issues. A clean article may only have 2-3; do not pad with generic
+suggestions to hit a count. Cover wording, missing content/context, and
+structure/format issues where relevant — not just phrasing.
+ 
+Return format (JSON array only):
 [
   {
-    "text": "suggestion here"
+    "category": "Headline | Structure | Clarity | Grammar | Engagement | Accuracy | Content",
+    "priority": "high | medium | low",
+    "text": "the specific issue and fix — quote the problem phrase for wording issues, or name the missing point/section for content or structure issues"
   }
 ]
+ 
+The "text" field must point at something concrete in the article (a phrase,
+a missing point, or a structural gap) — never a generic note like "improve
+clarity."
 
 ARTICLE:
 {ARTICLE_CONTENT}
-  `.trim(),
+    `.trim(),
   },
 
   selectiveSuggestion: {
     system: `
-You are a professional editor.
+You are a professional editor. Your task is to improve ONLY the provided text
+section — do not rewrite anything outside it, do not summarize it, do not
+comment on it.
 
-Your task is to improve ONLY the provided text section.
+Generate 3-4 alternative rewritten versions. Each version must be meaningfully
+different in style, not just synonym-swapped. Preserve the original meaning
+and all facts exactly.
 
-Generate 3 to 4 alternative rewritten versions that improve:
-- clarity
-- readability
-- conciseness
-- professional tone
-- sentence flow
-
-Do not explain your reasoning.
-Do not provide analysis.
-Do not provide bullet points.
-Do not provide markdown.
-
-Return ONLY valid JSON.
-`.trim(),
+Return ONLY valid JSON. No markdown fences. No text before or after the JSON.
+    `.trim(),
 
     userTemplate: `
-Rewrite the following text section and provide 3 to 4 improved alternatives.
+{CONTEXT_BLOCK}
+
+Rewrite the following text section and provide 3-4 improved alternatives,
+each with a distinct style.
 
 Return ONLY a JSON array using this exact schema:
-
 [
   {
-    "text": "improved version"
+    "label": "short 2-3 word style label, e.g. 'Concise', 'More formal', 'Punchier'",
+    "text": "the rewritten version"
   }
 ]
 
 Rules:
-- Return valid JSON only.
-- Do not wrap the JSON in markdown fences.
-- Do not include any text before or after the JSON.
-- Preserve the original meaning.
-- Each version should be different in style and wording.
+- Preserve the original meaning and all facts.
+- Each version should differ in structure or word choice, not just minor synonyms.
+- No markdown, no text outside the JSON array.
 
 TEXT SECTION:
 {ARTICLE_CONTENT}
-`.trim(),
+    `.trim(),
   },
 
   optimizationScore: {
     system: `
-You are an expert news quality evaluator.
-You score articles based on clarity, structure, and engagement.
+You are an expert news quality evaluator for Kiripost.
+
+Before producing a score, silently reason through these four criteria
+(do not output this reasoning):
+1. Clarity — is the writing easy to follow, free of ambiguity?
+2. Structure — does it lead with the most important information, with logical flow?
+3. Engagement — does it hold a reader's attention without being sensational?
+4. Grammar & polish — is it free of errors and awkward phrasing?
+
+Weigh the four criteria equally to arrive at a single overall score.
+Be consistent: a well-edited, clearly-structured article with no errors should
+score 85+; an article with one significant weakness should score 60-75; an
+article with multiple weaknesses should score below 60.
     `.trim(),
 
     userTemplate: `
-Evaluate this article.
+{CONTEXT_BLOCK}
 
-Out of 100, return format ONLY:
+Evaluate this article using the criteria in your system instructions.
 
-X
+Return ONLY the final integer score out of 100, and nothing else — no label,
+no explanation, no punctuation. Example valid output: 78
 
 ARTICLE:
 {ARTICLE_CONTENT}
@@ -113,12 +322,14 @@ ARTICLE:
 
   description: {
     system: `
-You are an expert content writer.
+You are an expert content writer for Kiripost.
 Your job is to create concise, accurate descriptions of articles.
 Write naturally while preserving the article's main idea.
-  `.trim(),
+    `.trim(),
 
     userTemplate: `
+{CONTEXT_BLOCK}
+
 Generate a short description for the following article.
 
 Rules:
@@ -126,25 +337,31 @@ Rules:
 - Keep it under 50 words.
 - Be informative, not clickbait.
 - Do not invent information.
-- Return ONLY the description.
+- Return ONLY the description, no label or quotation marks.
 
 ARTICLE:
 {ARTICLE_CONTENT}
-  `.trim(),
+    `.trim(),
   },
 };
 
-export function buildFinalPrompt(promptTemplate, articleContent, config = {}) {
-  const { tone = "professional", customInstructions = "" } = config;
+export function buildFinalPrompt(promptTemplate, articleContent, tone) {
+  const toneGuide = TONE_GUIDES[tone] || TONE_GUIDES.professional;
 
-  let prompt = promptTemplate.replace("{ARTICLE_CONTENT}", articleContent);
+  let contextBlock = `Writing Tone: ${tone} — ${toneGuide}`;
 
-  if (customInstructions?.trim()) {
-    prompt += `\n\nAdditional Instructions (highest priority): ${customInstructions}`;
-  }
+  // if (customInstructions?.trim()) {
+  //   contextBlock += `\n\nAdditional Instructions (highest priority — override any conflicting rule above): ${customInstructions.trim()}`;
+  // }
 
-  prompt += `\n\nWriting Tone: ${tone}`;
-  prompt += `\nFollow all instructions strictly.`;
+  // Context is placed BEFORE the article (models follow instructions better when
+  // they're read before the content they apply to), then restated briefly at the
+  // end for recency, since that's where generation begins.
+  let prompt = promptTemplate
+    .replace("{CONTEXT_BLOCK}", contextBlock)
+    .replace("{ARTICLE_CONTENT}", articleContent);
+
+  prompt += `\n\nRemember: follow the tone and additional instructions above strictly.`;
 
   return prompt;
 }

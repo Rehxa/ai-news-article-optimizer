@@ -1,7 +1,8 @@
 "use client";
 import { useState } from "react";
+import InputField from "@/pages/components/input_field";
 
-export function PasswordDialog({ onConfirm, onCancel, isOpen = true }) {
+export function PasswordDialog({ onConfirm, onCancel, isOpen = true, error }) {
   if (!isOpen) return null;
   const [draftOldPassword, setDraftOldPassword] = useState("");
   const [draftNewPassword, setDraftNewPassword] = useState("");
@@ -32,9 +33,10 @@ export function PasswordDialog({ onConfirm, onCancel, isOpen = true }) {
             alt="Reset password"
             className="w-[40%]"
           />
-          <div className="bg-natural-grey-blue grow h-[30%] rounded-2xl flex flex-col items-start justify-between gap-4 p-6">
+          <div className="bg-natural-grey-blue grow h-[30%] rounded-xl flex flex-col items-start justify-between gap-4 p-6">
             <h3 className="font-bold">Password</h3>
-            <input
+            {/* <input
+              title="Older password"
               type="password"
               placeholder="Enter old password"
               className="border-1 border-primary-blue bg-natural-white rounded-lg p-2 w-full focus:border-2 focus:border-primary-blue focus:outline-none"
@@ -54,10 +56,37 @@ export function PasswordDialog({ onConfirm, onCancel, isOpen = true }) {
               className="border-1 border-primary-blue bg-natural-white rounded-lg p-2 w-full focus:border-2 focus:border-primary-blue focus:outline-none"
               onChange={(e) => setDraftReEnterPassword(e.target.value)}
               value={draftReEnterPassword}
-            />
+            /> */}
+            <form action="" className="flex  flex-col gap-4">
+              <InputField
+                id={"old password"}
+                type={"password"}
+                label={"Old password"}
+                onChange={(e) => setDraftOldPassword(e.target.value)}
+                value={draftOldPassword}
+              />
+              <InputField
+                id={"new password"}
+                type={"password"}
+                label={"New password"}
+                onChange={(e) => setDraftNewPassword(e.target.value)}
+                value={draftNewPassword}
+              />
+              <InputField
+                id={"confirm password"}
+                type={"password"}
+                label={"Confirm password"}
+                onChange={(e) => setDraftReEnterPassword(e.target.value)}
+                value={draftReEnterPassword}
+              />
+            </form>
           </div>
         </div>
-
+        {error && (
+          <div className="rounded-lg bg-red-100 text-accent-red p-3 mb-4">
+            {error}
+          </div>
+        )}
         {/* Divider */}
         <div className="border-b-2 border-primary-blue mt-0 mb-6 rounded-full"></div>
 

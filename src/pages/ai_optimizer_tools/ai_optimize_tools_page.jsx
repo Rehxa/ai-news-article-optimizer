@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
-import Sidebar from "./components/side_bar";
 import Toolbar from "./components/tool_bar";
 import InputPanel from "./components/input_panel";
 import OutputPanel from "./components/output_panel";
@@ -10,7 +9,6 @@ import HighlightSuggestionPanel from "./components/highlight_suggestion_panel";
 import ConfigurePanel from "./components/configure_panel";
 import { NameDialog } from "./components/name_dialog";
 import { CustomDialog } from "../components/custom_dialog.jsx";
-import { getMockArticleById } from "../../lib/data/mocks";
 import { Article } from "../../lib/models/article";
 import {
   getOptimizedStats,
@@ -46,12 +44,22 @@ export default function ArticleOptimizerPage() {
 
   // DATA
   const [loading, setLoading] = useState(false);
+  const [outputLoading, setOutputLoading] = useState(false);
+  const [inputLoading, setInputLoading] = useState(false);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+  const [selectiveLoading, setSelectiveLoading] = useState(false);
+  const [scoreLoading, setScoreLoading] = useState(false);
+  const [debouncedLoading, setDebouncedLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(false);
+  const [descriptionLoading, setDescriptionLoading] = useState(false);
+
   const [error, setError] = useState(null);
   const [docTitle, setDocTitle] = useState("");
   const [docDescription, setDocDescription] = useState("");
   const [tone, setTone] = useState("professional");
   // const [customInstructions, setCustomInstructions] = useState("");
   // const [articleContent, setArticleContent] = useState("");
+  const [outputIsEmpty, setOutputIsEmpty] = useState(true);
   const [outputText, setOutputText] = useState("");
   const [inputText, setInputText] = useState("");
   const [suggestions, setSuggestions] = useState([]);
@@ -63,7 +71,6 @@ export default function ArticleOptimizerPage() {
   const [score, setScore] = useState(0);
 
   const [article, setArticle] = useState(null);
-  const [pageLoading, setPageLoading] = useState(true);
 
   const { user, loading: authLoading } = useAuth();
 
@@ -94,7 +101,8 @@ export default function ArticleOptimizerPage() {
       try {
         const userId = user.uid;
 
-        setPageLoading(true);
+        setOutputLoading(true);
+        setInputLoading(true);
         const res = await fetchWithAuth(
           `/api/articles?userId=${userId}&articleId=${id}`,
         );
@@ -103,35 +111,50 @@ export default function ArticleOptimizerPage() {
       } catch (error) {
         console.error("Error fetching article:", error);
       } finally {
-        setPageLoading(false);
+        setOutputLoading(false);
+        setInputLoading(false);
       }
     };
     if (id) fetchArticle();
   }, [id]);
 
   // Debounced save for input text changes
-  useDebouncedSave(inputText, 4000, (val) => {
+  useDebouncedSave(inputText, 3000, async (val) => {
     if (!id) return;
-    fetchWithAuth(`/api/articles/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "updateContent",
-        content: val,
-      }),
-    });
+    setDebouncedLoading(true);
+    try {
+      await fetchWithAuth(`/api/articles/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "updateContent",
+          content: val,
+        }),
+      });
+    } catch (error) {
+      console.log("Debounced saved fail: " + error);
+    } finally {
+      setDebouncedLoading(false);
+    }
   });
   // Debounced save for output text changes
-  useDebouncedSave(outputText, 4000, (val) => {
+  useDebouncedSave(outputText, 3000, async (val) => {
     if (!id) return;
-    fetchWithAuth(`/api/articles/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "updateContent",
-        optimizedContent: val,
-      }),
-    });
+    setDebouncedLoading(true);
+    try {
+      await fetchWithAuth(`/api/articles/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "updateContent",
+          optimizedContent: val,
+        }),
+      });
+    } catch (error) {
+      console.log("Debounced saved fail: " + error);
+    } finally {
+      setDebouncedLoading(false);
+    }
   });
 
   //initalize data when article is fetched
@@ -153,11 +176,17 @@ export default function ArticleOptimizerPage() {
 
   const originalStats = useMemo(() => getOriginalStats(inputText), [inputText]);
 
+  useEffect(() => {
+    if (!id) return;
+    setDebouncedLoading(true);
+  }, [inputText, outputText]);
+
   const handleClearInput = () => setInputText("");
 
   const handleOptimizeAll = async () => {
-    setLoading(true);
-
+    setOutputLoading(true);
+    setScoreLoading(true);
+    setSuggestionsLoading(true);
     const rewrite = await AIRequest.rewrite({ content: inputText, tone: tone });
 
     const [suggest, score] = await Promise.all([
@@ -204,11 +233,15 @@ export default function ArticleOptimizerPage() {
     setShowSuggestion(true);
     setShowStat(true);
 
-    setLoading(false);
+    setOutputLoading(false);
+    setScoreLoading(false);
+    setSuggestionsLoading(false);
   };
 
   const handleSuggestions = async () => {
-    setLoading(true);
+    setShowHighlight(false);
+    setShowSuggestion(true);
+    setSuggestionsLoading(true);
     const suggest = await AIRequest.suggest({ content: outputText });
 
     console.log(suggest);
@@ -228,14 +261,13 @@ export default function ArticleOptimizerPage() {
       })),
     );
 
-    setShowHighlight(false);
-    setShowSuggestion(true);
-
-    setLoading(false);
+    setSuggestionsLoading(false);
   };
 
   const handleOptimizedSuggestion = async () => {
-    setLoading(true);
+    setShowSuggestion(false);
+    setShowHighlight(true);
+    setSelectiveLoading(true);
     console.log("send selective suggestion");
     console.log("selection:", selection);
     console.log("type:", typeof selection);
@@ -259,14 +291,12 @@ export default function ArticleOptimizerPage() {
     );
 
     console.log(selectiveSuggestions);
-    setShowSuggestion(false);
-    setShowHighlight(true);
 
-    setLoading(false);
+    setSelectiveLoading(false);
   };
 
   const handleOptimizedScore = async () => {
-    setLoading(true);
+    setScoreLoading(true);
     const score = await AIRequest.score({ content: outputText });
     console.log(score);
     setScore(score);
@@ -279,7 +309,8 @@ export default function ArticleOptimizerPage() {
 
     setShowConfig(false);
     setShowStat(true);
-    setLoading(false);
+
+    setScoreLoading(false);
   };
 
   const handleSelectSuggestion = (suggestion) => {
@@ -291,19 +322,18 @@ export default function ArticleOptimizerPage() {
   };
 
   const handleAIDescription = async () => {
-    setLoading(true);
+    setDescriptionLoading(true);
     try {
       const description = await AIRequest.description({
         content: outputText || inputText,
       });
-      // setDocDescription(description);
       console.log("AI generated description:", description);
       console.log("docDescription:", docDescription);
       return description;
     } catch (error) {
       console.error("Error generating AI description:", error);
     } finally {
-      setLoading(false);
+      setDescriptionLoading(false);
     }
   };
 
@@ -367,9 +397,18 @@ export default function ArticleOptimizerPage() {
 
   const [copied, setCopied] = useState(false);
 
-  const handleCopy = async (text) => {
+  const handleCopy = async (html) => {
     try {
-      await navigator.clipboard.writeText(text);
+      const temp = document.createElement("div");
+      temp.innerHTML = html;
+      const plainText = temp.textContent || "";
+
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          "text/html": new Blob([html], { type: "text/html" }),
+          "text/plain": new Blob([plainText], { type: "text/plain" }),
+        }),
+      ]);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
@@ -385,6 +424,7 @@ export default function ArticleOptimizerPage() {
       <div className="w-full h-full flex flex-col p-2 gap-2">
         {/* toolbar - Fixed text margins for alignment */}
         <Toolbar
+          loading={debouncedLoading}
           title={docTitle || "Untitled"}
           panels={{
             input: showInput,
@@ -460,15 +500,17 @@ export default function ArticleOptimizerPage() {
             <InputPanel
               value={inputText}
               onChange={setInputText}
-              loading={loading}
+              loading={inputLoading}
               onHandleOptimize={handleOptimizeAll}
               onClear={handleClearInput}
+              optimizeLoading={outputLoading}
             />
           )}
           {showOptimize && (
             <OutputPanel
               value={outputText}
               onChange={setOutputText}
+              setOutputIsEmpty={setOutputIsEmpty}
               onReOpimized={handleOptimizeAll}
               onSelectionChange={setSelection}
               selection={selection}
@@ -476,6 +518,7 @@ export default function ArticleOptimizerPage() {
               onSelectiveReOpimized={handleOptimizedSuggestion}
               onCopy={handleCopy}
               copied={copied}
+              loading={outputLoading}
             />
           )}
           {showSidebar && (
@@ -485,6 +528,8 @@ export default function ArticleOptimizerPage() {
                   suggestions={suggestions}
                   setSuggestions={setSuggestions}
                   onHandleSuggestions={handleSuggestions}
+                  loading={suggestionsLoading}
+                  isOutputText={outputIsEmpty}
                 />
               )}
 
@@ -493,6 +538,7 @@ export default function ArticleOptimizerPage() {
                   selectiveSuggestions={selectiveSuggestions}
                   onSelect={handleSelectSuggestion}
                   onOptimizedSuggestion={handleOptimizedSuggestion}
+                  loading={selectiveLoading}
                 />
               )}
               {/* stat needs to be state to be responded instead */}
@@ -525,6 +571,7 @@ export default function ArticleOptimizerPage() {
         onCancel={() => setShowNameDialogPopup(false)}
         isOpen={showNameDialogPopup}
         onAIDescription={handleAIDescription}
+        loading={descriptionLoading}
       />
       {/* Delete article dialog */}
       <CustomDialog

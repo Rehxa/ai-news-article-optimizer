@@ -3,6 +3,7 @@ import ArticleCard from "@/pages/components/article_card";
 import AddNewCard from "@/pages/components/add_new_card";
 import Pagination from "@/pages/my_article/components/pagination";
 import ActionButton from "@/pages/components/action_button.jsx";
+import Loading from "@/pages/components/loading";
 export function ArticleWorkspace({
   articles,
   loading,
@@ -41,7 +42,7 @@ export function ArticleWorkspace({
     <>
       {/* Side Bar */}
       <SideBarGlobal mode={mode} />
-      <div className="w-full h-screen flex flex-col justify-start p-5 gap-5 bg-natural-grey-blue">
+      <div className="w-full h-screen flex flex-col justify-start p-5 gap-5 bg-natural-white">
         {/* Title */}
         <h1 className="font-bold text-5xl">
           {mode == "my_article" ? " My Article" : "Recycle Bin"}
@@ -60,6 +61,7 @@ export function ArticleWorkspace({
             </p>
           </div>
         )}{" "}
+        {loading && <Loading size={10} />}
         {totalCount === 0 && !loading && mode === "my_article" && (
           <div className="flex flex-col items-center justify-center w-full h-full">
             <img
@@ -121,7 +123,7 @@ export function ArticleWorkspace({
             </div>
             {/* Article Cards */}
             {/* <div className="grid grid-cols-5 grid-rows-3 gap-2"> */}
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(196px,1fr))] justify-center place-items-center gap-4 overflow-auto no-scrollbar">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(196px,1fr))] justify-center place-items-center gap-4 overflow-y-scroll no-scrollbar pb-2">
               {/* tobe add */}
               {mode == "my_article" && <AddNewCard onClick={onCreateArticle} />}
               {/* <div className="flex flex-wrap gap-4 w-fit "> */}

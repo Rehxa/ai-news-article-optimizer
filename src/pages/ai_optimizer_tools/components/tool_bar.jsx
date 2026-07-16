@@ -1,17 +1,29 @@
-export default function ToolBar({ panels, onToggle, title }) {
+"use client";
+import Loading from "@/pages/components/loading";
+
+export default function ToolBar({ panels, onToggle, title, loading }) {
   return (
     <div className="bg-tinted-white-blue px-6  p-3 rounded-2xl shadow-md h-15 flex flex-row items-center justify-between">
       <div className="flex flex-row items-center gap-4">
-        <button
-          aria-label="Go back"
-          title="Go back"
-          onClick={onToggle.back}
-          className="material-symbols-outlined text-3xl cursor-pointer text-primary-blue"
-        >
-          arrow_back
-        </button>
+        <div className="flex flex-row gap-4">
+          <button
+            aria-label="Go back"
+            title="Go back"
+            onClick={onToggle.back}
+            className="material-symbols-outlined text-3xl cursor-pointer text-primary-blue"
+          >
+            arrow_back
+          </button>
+          {loading ? (
+            <Loading size={6} />
+          ) : (
+            <div className="material-symbols-outlined text-3xl cursor-pointer text-primary-blue">
+              cloud_done
+            </div>
+          )}
+        </div>
 
-        <div className="material-symbols-outlined text-3xl cursor-pointer text-primary-blue">
+        <div className="material-symbols-outlined text-3xl text-primary-blue">
           library_books
         </div>
 

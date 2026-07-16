@@ -13,6 +13,7 @@ import ListItem from "@tiptap/extension-list-item";
 import { Selection } from "@tiptap/extensions/selection";
 import Highlight from "@tiptap/extension-highlight";
 import { useEffect, useState } from "react";
+import Loading from "@/pages/components/loading";
 
 export default function InputPanel({
   value,
@@ -20,6 +21,7 @@ export default function InputPanel({
   onHandleOptimize,
   loading,
   onClear,
+  optimizeLoading,
 }) {
   const [headingOpen, setHeadingOpen] = useState(false);
 
@@ -149,14 +151,14 @@ export default function InputPanel({
       active: editor.isActive("orderedList"),
       onClick: () => editor.chain().focus().toggleOrderedList().run(),
     },
-    { type: "divider" },
-    {
-      type: "button",
-      icon: "content_copy",
-      title: "Copy",
-      active: false,
-      onClick: () => {},
-    },
+    // { type: "divider" },
+    // {
+    //   type: "button",
+    //   icon: "content_copy",
+    //   title: "Copy",
+    //   active: false,
+    //   onClick: () => {},
+    // },
     // {
     //   type: "button",
     //   icon: "undo",
@@ -197,6 +199,7 @@ export default function InputPanel({
       </div>
       <div className="w-full h-1 grow rounded-lg bg-natural-white p-4 border-1 border-gray-200 flex flex-col overflow-hidden mb-4 min-h-0">
         {/* Floating Toolbar (appears when text selected) */}
+        {loading && <Loading />}
         <FloatingMenu
           editor={editor}
           tippyOptions={{
@@ -286,10 +289,10 @@ export default function InputPanel({
         {/* button component */}
         <button
           onClick={onHandleOptimize}
-          disabled={loading}
-          className="bg-primary-blue text-white py-2 px-4 rounded-full hover:bg-blue-600"
+          disabled={optimizeLoading}
+          className="bg-primary-blue text-white py-2 px-4 rounded-full hover:bg-blue-600 flex flex-row disabled:opacity-60"
         >
-          {loading ? "Opitimizing..." : "Optimize"}
+          Optimize
         </button>
       </div>
     </div>

@@ -35,9 +35,11 @@ export default function ConfigPanel({ onToneOfVoice, tone }) {
           className="border-1 border-primary-blue rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-primary-blue"
         >
           <option value="professional">Professional</option>
-          <option value="casual">Casual</option>
+          <option value="conversational">Conversational</option>
+          <option value="academic">Academic</option>
+          <option value="technical">Technical</option>
           <option value="journalistic">Journalistic</option>
-          <option value="formal">Formal</option>
+          <option value="marketing">Marketing</option>
         </select>
       </div>
 

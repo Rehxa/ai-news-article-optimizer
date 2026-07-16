@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Loading from "@/pages/components/loading";
 
 export function NameDialog({
   title = "Name and Description Document",
@@ -8,6 +9,7 @@ export function NameDialog({
   onCancel,
   isOpen = true,
   onAIDescription,
+  loading,
 }) {
   if (!isOpen) return null;
   const [draftTitle, setDraftTitle] = useState(docTitle);
@@ -50,12 +52,21 @@ export function NameDialog({
             onChange={(e) => setDraftTitle(e.target.value)}
             value={draftTitle}
           />
-          <p
-            className="text-dark-brown font-bold
-           text-sm flex-3"
-          >
-            Description
-          </p>
+          <div className="flex flex-row w-full items-center">
+            <p
+              className="block text-dark-brown font-bold
+             text-sm mr-auto"
+            >
+              Description
+            </p>
+            <button
+              onClick={handleAI}
+              disabled={loading}
+              className="px-3 py-2 bg-primary-blue  text-natural-white font-bold rounded-full hover:opacity-50 transition mt-2 text-sm"
+            >
+              {loading ? <Loading size={5} /> : "AI"}
+            </button>
+          </div>
           <div className="relative w-full flex flex-col gap-0">
             <textarea
               rows={3}
@@ -65,13 +76,6 @@ export function NameDialog({
               onChange={(e) => setDraftDescription(e.target.value)}
               value={draftDescription}
             />
-
-            <button
-              onClick={handleAI}
-              className="absolute bottom-2 right-2 px-3 py-2 bg-primary-blue  text-natural-white font-bold rounded-full hover:opacity-50 transition mt-2 text-sm"
-            >
-              AI
-            </button>
           </div>
         </div>
 

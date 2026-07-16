@@ -1,3 +1,5 @@
+"use client";
+import { useState } from "react";
 export function CustomDialog({
   title = "Delete articles",
   message = "Are you sure you still want to delete 3 selected items?",
@@ -8,6 +10,28 @@ export function CustomDialog({
   isDelete = false,
   isLogOut = false,
 }) {
+  const [disabled, setDisabled] = useState(false);
+
+  const handleClick = () => {
+    setDisabled(true);
+    onConfirm();
+    setTimeout(() => {
+      setDisabled(false);
+    }, 2000);
+  };
+
+  //   const handleClick = async () => {
+  //   if (disabled) return;
+
+  //   setDisabled(true);
+
+  //   try {
+  //     await onConfirm();
+  //   } finally {
+  //     setDisabled(false);
+  //   }
+  // };
+
   if (!isOpen) return null;
 
   return (
@@ -49,8 +73,9 @@ export function CustomDialog({
             Cancel
           </button>
           <button
-            onClick={onConfirm}
-            className={`px-6 py-2 ${isDelete ? "bg-accent-red" : "bg-primary-blue"}  text-natural-white font-bold rounded-full hover:opacity-50 transition`}
+            onClick={handleClick}
+            disabled={disabled}
+            className={`px-6 py-2 ${isDelete ? "bg-accent-red" : "bg-primary-blue"}  text-natural-white font-bold rounded-full hover:opacity-50 transition disabled:opacity-30`}
           >
             Confirm
           </button>

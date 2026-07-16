@@ -107,9 +107,8 @@ export default function ArticleCard({
           )}
         </div>
         {/* Description text */}
-        <p className="relative font-geist font-normal text-xs leading-5 text-dark-brown max-w-[187px] z-10 line-clamp-3">
+        <p className="relative font-geist font-normal text-xs leading-5 text-dark-brown max-w-[187px] z-10 line-clamp-3 w-[80%]">
           {description}
-          {/* Lorem ipsum dolor sit amet consectetur. Dictum neque sed faucibus. */}
         </p>
         {/* Decorative particles */}
         <div className="absolute overflow-hidden inset-0 z-0">

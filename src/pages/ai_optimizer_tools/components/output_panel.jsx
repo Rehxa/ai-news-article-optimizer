@@ -7,18 +7,16 @@ import StarterKit from "@tiptap/starter-kit";
 import TextAlign from "@tiptap/extension-text-align";
 import FontFamily from "@tiptap/extension-font-family";
 import { TextStyle } from "@tiptap/extension-text-style";
-import BulletList from "@tiptap/extension-bullet-list";
-import OrderedList from "@tiptap/extension-ordered-list";
-import ListItem from "@tiptap/extension-list-item";
 import { Selection } from "@tiptap/extensions/selection";
 import Highlight from "@tiptap/extension-highlight";
 
-// import { AiSelectionHighlight } from "@/app/extensions/AiSelectionHighlight";
+import Loading from "@/pages/components/loading";
 
 import { useEffect, useState } from "react";
 export default function OutputPanel({
   value,
   onChange,
+  setOutputIsEmpty,
   onReOpimized,
   onSelectionChange,
   selection,
@@ -26,6 +24,7 @@ export default function OutputPanel({
   onSelectiveReOpimized,
   onCopy,
   copied,
+  loading,
 }) {
   const [headingOpen, setHeadingOpen] = useState(false);
 
@@ -55,6 +54,7 @@ export default function OutputPanel({
     content: value,
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
+      setOutputIsEmpty(editor.isEmpty);
     },
   });
 
@@ -213,13 +213,13 @@ export default function OutputPanel({
       onClick: () => editor.chain().focus().toggleOrderedList().run(),
     },
     { type: "divider" },
-    {
-      type: "button",
-      icon: copied ? "check" : "content_copy",
-      title: "Copy",
-      active: false,
-      onClick: () => onCopy(selection.text),
-    },
+    // {
+    //   type: "button",
+    //   icon: copied ? "check" : "content_copy",
+    //   title: "Copy",
+    //   active: false,
+    //   onClick: () => onCopy(selection.text),
+    // },
     {
       type: "button",
       icon: "cached",
@@ -270,6 +270,7 @@ export default function OutputPanel({
       {/* Editor Container */}
       <div className="w-full h-1 grow rounded-lg bg-natural-white p-4 border-1 border-gray-200 flex flex-col overflow-hidden mb-4 min-h-0">
         {/* Floating Toolbar (appears when text selected) */}
+        {loading && <Loading />}
         <FloatingMenu
           editor={editor}
           tippyOptions={{
@@ -377,7 +378,7 @@ export default function OutputPanel({
         })}
         <ToolbarDivider /> */}
         <button
-          onClick={() => onCopy(value)}
+          onClick={() => onCopy(editor.getHTML())}
           className="material-symbols-outlined text-primary-blue hover:opacity-70"
         >
           {copied ? "check" : "content_copy"}

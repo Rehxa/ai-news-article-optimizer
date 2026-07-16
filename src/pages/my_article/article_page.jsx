@@ -13,7 +13,6 @@ export default function MyArticlePage() {
   const [allArticles, setAllArticles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showDeletePopup, setShowDeletePopup] = useState(false);
-  const [showDeleteAllPopup, setShowDeleteAllPopup] = useState(false);
   const [showAlertPopup, setShowAlertPopup] = useState(false);
 
   const {
@@ -73,10 +72,6 @@ export default function MyArticlePage() {
     }
   };
 
-  //   const handleDeleteAll = async () => {
-  //     setShowDeleteAllPopup(true);
-  //   };
-
   const handleConfirmDelete = async () => {
     const ids = [...selectedIds];
     try {
@@ -104,6 +99,7 @@ export default function MyArticlePage() {
 
   const handleCreateArticle = async () => {
     try {
+      setLoading(true);
       const userId = user.uid;
 
       // Fetch the user's default tone first
@@ -130,6 +126,8 @@ export default function MyArticlePage() {
       router.push(`/article/${data.id}`);
     } catch (error) {
       console.error("Error creating article:", error);
+    } finally {
+      setLoading(false);
     }
   };
 

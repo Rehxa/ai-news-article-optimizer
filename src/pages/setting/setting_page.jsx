@@ -5,10 +5,12 @@ import { useState, useEffect } from "react";
 import SideBarGlobal from "@/pages/components/side_bar_global";
 import ActionButton from "@/pages/components/action_button.jsx";
 import { CustomDialog } from "@/pages/components/custom_dialog.jsx";
-import { PasswordDialog } from "@/pages/setting/components/reset_password_dialog";
+import { PasswordDialog } from "@/pages/setting/components/change_password_dialog";
 import { User } from "@/lib/models";
 import { useAuth } from "@/context/auth_context";
 import { fetchWithAuth } from "@/app/api/auth/fetch_with_auth";
+import InputField from "@/pages/components/input_field";
+
 import {
   logout,
   changePassword,
@@ -98,17 +100,21 @@ export default function SettingPage() {
     }
   };
 
-  // todo need auth
   const handleConfirmDeleteAccount = async () => {
     setError(null);
     setLoading(true);
+
+    // if (!password) {
+    //   setError("Please fill in all fields.");
+    //   return;
+    // }
 
     try {
       await deleteAccount(password); // password is null/undefined for Google users, fine either way
       await logout(); // clear local auth state
       router.push("/login"); // or wherever you want to land post-deletion
     } catch (error) {
-      console.error("Error deleting account:", error);
+      // console.error("Error deleting account:", error);
 
       switch (error.code) {
         case "auth/wrong-password":
@@ -170,11 +176,12 @@ export default function SettingPage() {
     }
     try {
       await changePassword(oldPass, newPass);
+      setShowPasswordPopup(false);
     } catch (error) {
       switch (error.code) {
         case "auth/invalid-credential":
         case "auth/wrong-password":
-          setError("Current password is incorrect.");
+          setError("Current old password is incorrect.");
           break;
 
         case "auth/weak-password":
@@ -186,12 +193,10 @@ export default function SettingPage() {
           break;
 
         default:
-          setError(error.message);
+          setError(
+            error.message || "Failed to change password. Please try again.",
+          );
       }
-
-      console.error(error);
-    } finally {
-      setShowPasswordPopup(false);
     }
   };
 
@@ -276,9 +281,11 @@ export default function SettingPage() {
                   className="border-1 border-primary-blue rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-primary-blue"
                 >
                   <option value="professional">Professional</option>
-                  <option value="casual">Casual</option>
+                  <option value="conversational">Conversational</option>
+                  <option value="academic">Academic</option>
+                  <option value="technical">Technical</option>
                   <option value="journalistic">Journalistic</option>
-                  <option value="formal">Formal</option>
+                  <option value="marketing">Marketing</option>
                 </select>
               </div>
             </div>
@@ -295,18 +302,28 @@ export default function SettingPage() {
             <div className="material-symbols-rounded text-accent-red !text-7xl !font-bold">
               delete
             </div>
-            <input
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              type="password"
-              placeholder="Password required"
-              className="border-1 border-accent-red rounded-lg p-2 w-full focus:border-2 focus:border-accent-red focus:outline-none h-10"
-            />
+            <div className="flex flex-col mt-6">
+              <InputField
+                id={"Confirm password"}
+                type={"password"}
+                label={"Required password"}
+                onChange={(e) => setPassword(e.target.value)}
+                value={password}
+                isDelete={true}
+              />
+              <div className="rounded text-accent-red text-xs p-1 mb-4">
+                {error ? error : ""}
+              </div>
+            </div>
           </div>
         }
         isOpen={showDeleteAccountPopup}
         onConfirm={handleConfirmDeleteAccount}
-        onCancel={() => setShowDeleteAccountPopup(false)}
+        onCancel={() => {
+          setShowDeleteAccountPopup(false);
+          setPassword("");
+          setError("");
+        }}
         isLogOut={true}
       />
 
@@ -346,7 +363,11 @@ export default function SettingPage() {
         onConfirm={(oldPwd, newPwd, confirmPwd) =>
           handleResetPassword(oldPwd, newPwd, confirmPwd)
         }
-        onCancel={() => setShowPasswordPopup(false)}
+        onCancel={() => {
+          setShowPasswordPopup(false);
+          setError("");
+        }}
+        error={error}
       />
     </div>
   );

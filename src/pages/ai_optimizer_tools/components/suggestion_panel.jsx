@@ -1,21 +1,11 @@
-import { useState } from "react";
+import Loading from "@/pages/components/loading";
 export default function SuggestionPanel({
   suggestions,
   setSuggestions,
   onHandleSuggestions,
+  loading,
+  isOutputText,
 }) {
-  // const [suggestions, setSuggestions] = useState([
-  //   { id: 1, text: "Add reference link for the current topic", checked: false },
-  //   { id: 2, text: "Needed additional question and context", checked: false },
-  //   {
-  //     id: 3,
-  //     text: "Simplify some complex sentences and topics to be at least below 4 or 5 sentences.",
-  //     checked: false,
-  //   },
-  //   { id: 4, text: "Need more sources and references", checked: true },
-  //   { id: 5, text: "Improve H2 for more clarificaiton", checked: true }, // Keep spelling matching screenshot typo
-  // ]);
-
   const handleToggle = (id) => {
     setSuggestions(
       suggestions.map((item) =>
@@ -23,6 +13,9 @@ export default function SuggestionPanel({
       ),
     );
   };
+
+  const showReloadButton = () => suggestions.length > 0 || !isOutputText;
+
   return (
     <div className="bg-tinted-white-blue rounded-xl shadow-md p-4 h-[42vh] grow flex flex-col justify-between">
       <div className="flex items-center justify-between mb-4">
@@ -30,21 +23,40 @@ export default function SuggestionPanel({
           <div className="material-symbols-outlined text-primary-blue">
             tooltip
           </div>
-          <h1 className="text-xl font-bold text-dark-brown">Suggestion</h1>
+          <h1 className="text-xl font-bold text-dark-brown">
+            Content Suggestion
+          </h1>
         </div>
-        {suggestions.length > 0 && (
+        {showReloadButton && (
           <button
             onClick={onHandleSuggestions}
-            className="flex items-center justify-center bg-natural-white rounded-xl w-8 aspect-square border-2 border-primary-blue box-border cursor-pointer hover:opacity-90"
+            disabled={loading}
+            className="flex items-center justify-center bg-natural-white rounded-xl w-8 aspect-square border-2 border-primary-blue box-border cursor-pointer hover:opacity-90 disabled:border-accent-grey"
           >
-            <div className="material-symbols-outlined text-primary-blue">
+            <div
+              className={`material-symbols-outlined ${loading ? "text-accent-grey" : "text-primary-blue"}`}
+            >
               cached
             </div>
           </button>
         )}
       </div>
+
+      {suggestions?.length == 0 && !loading && (
+        <div className=" rounded-lg bg-natural-grey-blue mb-2 p-2 place-self-center">
+          <p className="text-xs font-bold text-dark-brown">
+            Optimize content in the output text field needed in order to
+            generate suggestion
+          </p>
+        </div>
+      )}
+
       <div className="w-full rounded-lg gap-2 overflow-y-auto grow">
-        {suggestions.map((sug) => suggestionTile(sug))}
+        {loading ? (
+          <Loading />
+        ) : (
+          suggestions.map((sug) => !loading && suggestionTile(sug))
+        )}
       </div>
     </div>
   );

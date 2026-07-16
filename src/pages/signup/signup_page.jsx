@@ -25,24 +25,78 @@ export default function SignPage() {
       await register(email, password);
       router.push("/views/login");
     } catch (error) {
-      console.log(error);
+      switch (error.code) {
+        case "auth/email-already-in-use":
+          setError("An account with this email already exists.");
+          break;
+
+        case "auth/invalid-email":
+          setError("Please enter a valid email address.");
+          break;
+
+        case "auth/weak-password":
+          setError("Password must be at least 6 characters long.");
+          break;
+
+        case "auth/network-request-failed":
+          setError("Network error. Check your internet connection.");
+          break;
+
+        case "auth/too-many-requests":
+          setError("Too many attempts. Please try again later.");
+          break;
+
+        case "auth/operation-not-allowed":
+          setError("Email/password sign up is currently unavailable.");
+          break;
+
+        default:
+          setError("Unable to create your account. Please try again.");
+          console.error(error);
+      }
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    setError("");
-    setSubmitting(true);
-    try {
-      await loginWithGoogle();
-      router.replace("/my_article");
-    } catch (err) {
-      setError("Unable to sign in with google");
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  // const handleGoogleSignIn = async () => {
+  //   setError("");
+  //   setSubmitting(true);
+  //   try {
+  //     await loginWithGoogle();
+  //     router.replace("/my_article");
+  //   } catch (error) {
+  //     switch (error.code) {
+  //       case "auth/popup-closed-by-user":
+  //         setError("Google sign-in was cancelled.");
+  //         break;
+
+  //       case "auth/popup-blocked":
+  //         setError("Your browser blocked the sign-in popup.");
+  //         break;
+
+  //       case "auth/cancelled-popup-request":
+  //         // Usually ignore this one because it happens when multiple popups are requested.
+  //         break;
+
+  //       case "auth/network-request-failed":
+  //         setError("Network error. Check your internet connection.");
+  //         break;
+
+  //       case "auth/account-exists-with-different-credential":
+  //         setError(
+  //           "An account with this email already exists using a different sign-in method.",
+  //         );
+  //         break;
+
+  //       default:
+  //         setError("Unable to sign in with Google. Please try again.");
+  //         console.error(error);
+  //     }
+  //   } finally {
+  //     setSubmitting(false);
+  //   }
+  // };
 
   return (
     <AuthLayout
@@ -100,6 +154,12 @@ export default function SignPage() {
                 />
               </div>
 
+              {error && (
+                <div className="rounded-lg text-accent-red p-1 mb-4">
+                  {error}
+                </div>
+              )}
+
               {/* Sign up Button */}
               <button
                 onClick={handleSignUp}
@@ -123,10 +183,10 @@ export default function SignPage() {
             </div>
 
             {/* Divider */}
-            <p className="mt-3.5 mb-3.5 text-center text-gray-600">Or</p>
+            {/* <p className="mt-3.5 mb-3.5 text-center text-gray-600">Or</p> */}
 
             {/* Google Login */}
-            <button
+            {/* <button
               onClick={handleGoogleSignIn}
               className="flex h-12 w-full items-center justify-center gap-3 rounded-full bg-natural-grey-blue shadow transition hover:bg-[#d6e8fb] cursor-pointer z-10"
             >
@@ -136,8 +196,8 @@ export default function SignPage() {
                 className="h-5 w-5"
               />
 
-              <span className="font-semibold">Sign up with Google</span>
-            </button>
+              <span className="font-semibold">Sign in with Google</span>
+            </button> */}
           </div>
         </>
       }

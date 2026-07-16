@@ -12,6 +12,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const { user, loading: authLoading } = useAuth();
+  const [error, setError] = useState("");
 
   useEffect(() => {
     //? after sign up need user to login, but it seem this check if user login or not.
@@ -27,7 +28,22 @@ export default function LoginPage() {
       await login(email, password);
       router.replace("/my_article");
     } catch (error) {
-      console.log(error);
+      switch (error.code) {
+        case "auth/invalid-credential":
+          setError("Incorrect email or password.");
+          break;
+
+        case "auth/too-many-requests":
+          setError("Too many login attempts. Please try again later.");
+          break;
+
+        case "auth/network-request-failed":
+          setError("Network error. Check your internet connection.");
+          break;
+
+        default:
+          setError("Something went wrong. Please try again.");
+      }
     } finally {
       setSubmitting(false);
     }
@@ -39,7 +55,33 @@ export default function LoginPage() {
       await loginWithGoogle();
       router.replace("/my_article");
     } catch (error) {
-      console.log(error);
+      switch (error.code) {
+        case "auth/popup-closed-by-user":
+          setError("Google sign-in was cancelled.");
+          break;
+
+        case "auth/popup-blocked":
+          setError("Your browser blocked the sign-in popup.");
+          break;
+
+        case "auth/cancelled-popup-request":
+          // Usually ignore this one because it happens when multiple popups are requested.
+          break;
+
+        case "auth/network-request-failed":
+          setError("Network error. Check your internet connection.");
+          break;
+
+        case "auth/account-exists-with-different-credential":
+          setError(
+            "An account with this email already exists using a different sign-in method.",
+          );
+          break;
+
+        default:
+          setError("Unable to sign in with Google. Please try again.");
+          console.error(error);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -73,7 +115,7 @@ export default function LoginPage() {
               </div>
 
               {/* Password */}
-              <div className="mb-6 flex h-14 items-center gap-3 rounded-lg bg-white px-5 shadow">
+              <div className="mb-2 flex h-14 items-center gap-3 rounded-lg bg-white px-5 shadow">
                 <span className="material-symbols-outlined text-xl text-primary-blue">
                   key
                 </span>
@@ -86,6 +128,12 @@ export default function LoginPage() {
                   className="w-full bg-transparent text-sm outline-none placeholder:text-gray-400"
                 />
               </div>
+
+              {error && (
+                <div className="rounded-lg text-accent-red p-1 mb-2">
+                  {error}
+                </div>
+              )}
 
               {/* Login Button */}
               <button
@@ -130,7 +178,7 @@ export default function LoginPage() {
                 className="h-5 w-5"
               />
 
-              <span className="font-semibold">Login with Google</span>
+              <span className="font-semibold">Sign in with Google</span>
             </button>
           </div>
         </>
