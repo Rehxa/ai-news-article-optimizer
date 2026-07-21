@@ -1,14 +1,18 @@
 export const getOriginalStats = (content) => {
+  const text = htmlToText(content);
+
   return {
-    originalWordCount: getWordCount(content),
+    originalWordCount: getWordCount(text),
   };
 };
 
 export const getOptimizedStats = (content) => {
+  const text = htmlToText(content);
+
   return {
-    optimizedWordCount: getWordCount(content),
-    readability: getReadabilityDifficulty(content),
-    estimateReadTime: estimateReadTime(content),
+    optimizedWordCount: getWordCount(text),
+    readability: getReadabilityDifficulty(text),
+    estimateReadTime: estimateReadTime(text),
   };
 };
 
@@ -25,23 +29,23 @@ const estimateReadTime = (text = "") => {
 export function getReadabilityDifficulty(text = "") {
   const score = getFleschReadingEase(text);
   // Grade 5th
-  if (score >= 90) return "Very Easy";
+  if (score >= 90) return "Very Easy (1/7)";
   //Grade 6th
-  if (score >= 80) return "Easy";
+  if (score >= 80) return "Easy (2/7)";
   //Grade 7th
-  if (score >= 70) return "Fairly Easy";
+  if (score >= 70) return "Fairly Easy (3/7)";
   //Grade 8th & 9th
-  if (score >= 60) return "Standard";
+  if (score >= 60) return "Standard (4/7)";
   //Grade 10th - 12th
-  if (score >= 50) return "Fairly Difficult";
+  if (score >= 50) return "Fairly Difficult (5/7)";
   //College
-  if (score >= 30) return "Difficult";
+  if (score >= 30) return "Difficult (6/7)";
   //College
-  if (score >= 10) return "Very Difficult";
+  if (score >= 10) return "Very Difficult (7/7)";
   //No input
   if (score == 0) return "Required Text Input";
   //Professional
-  return "Extremely Difficult";
+  return "Very Difficult (7/7)";
 }
 
 // Readbility  (Flesch Reading Ease formula)
@@ -87,4 +91,10 @@ export function getTotalSyllables(text = "") {
     .split(/\s+/)
     .filter(Boolean)
     .reduce((sum, word) => sum + countSyllables(word), 0);
+}
+
+export function htmlToText(html = "") {
+  const div = document.createElement("div");
+  div.innerHTML = html;
+  return div.textContent || "";
 }

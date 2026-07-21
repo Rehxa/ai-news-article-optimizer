@@ -14,7 +14,7 @@ export default function SuggestionPanel({
     );
   };
 
-  const showReloadButton = () => suggestions.length > 0 || !isOutputText;
+  const showReloadButton = suggestions.length > 0 || !isOutputText;
 
   return (
     <div className="bg-tinted-white-blue rounded-xl shadow-md p-4 h-[42vh] grow flex flex-col justify-between">

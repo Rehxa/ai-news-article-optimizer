@@ -44,7 +44,7 @@ export function ArticleWorkspace({
       <SideBarGlobal mode={mode} />
       <div className="w-full h-screen flex flex-col justify-start p-5 gap-5 bg-natural-white">
         {/* Title */}
-        <h1 className="font-bold text-5xl">
+        <h1 className="font-bold text-5xl text-dark-brown">
           {mode == "my_article" ? " My Article" : "Recycle Bin"}
         </h1>
         {/* Divider */}
@@ -74,7 +74,7 @@ export function ArticleWorkspace({
             </p>
           </div>
         )}{" "}
-        {totalCount > 0 && (
+        {totalCount > 0 && !loading && (
           <>
             {/* Search */}
             <div className="flex flex-row justify-between items-center">
@@ -182,7 +182,8 @@ function ButtonGroup({
       >
         {/* My Article */}{" "}
         <h1 className="font-bold text-primary-blue">
-          {isSelectionState ? selectedIds.size : ""} selected
+          {isSelectionState ? selectedIds.size : ""}{" "}
+          {isSelectionState ? "selected" : "select"}
         </h1>
         {isSelectionState && (
           <span className="material-symbols-rounded text-primary-blue">

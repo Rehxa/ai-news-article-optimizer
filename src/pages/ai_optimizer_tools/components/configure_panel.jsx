@@ -43,6 +43,13 @@ export default function ConfigPanel({ onToneOfVoice, tone }) {
         </select>
       </div>
 
+      <div className="w-full h-fit text-base bg-natural-grey-blue rounded-2xl flex flex-row justify-between items-stretch mb-2 px-5 py-3 gap-4">
+        <span className="text-sm text-dark-brown text-left">
+          After configuration, you can re-optimize the content again to see the
+          new tone result
+        </span>
+      </div>
+
       {/* <div className="flex flex-row justify-end">
         <button className="w-1/3 bg-primary-blue text-white py-1 px-2 rounded-full hover:bg-blue-600">
           Confirm

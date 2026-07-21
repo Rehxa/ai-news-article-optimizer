@@ -3,6 +3,7 @@
 import AuthLayout from "@/pages/components/auth_layout";
 import { useRouter } from "next/navigation";
 import { register, loginWithGoogle } from "@/lib/services/auth/auth_service.js";
+import Loading from "@/pages/components/loading";
 import { useState } from "react";
 
 export default function SignPage() {
@@ -165,7 +166,7 @@ export default function SignPage() {
                 onClick={handleSignUp}
                 className="mb-5 h-11 w-full rounded-full bg-primary-blue font-semibold text-white shadow transition hover:brightness-110 cursor-pointer"
               >
-                Sign up
+                {submitting ? <Loading size={5} /> : "Sign up"}
               </button>
 
               {/* Links */}

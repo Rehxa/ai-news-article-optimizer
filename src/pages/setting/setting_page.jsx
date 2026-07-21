@@ -10,6 +10,8 @@ import { User } from "@/lib/models";
 import { useAuth } from "@/context/auth_context";
 import { fetchWithAuth } from "@/app/api/auth/fetch_with_auth";
 import InputField from "@/pages/components/input_field";
+import UserAvatar from "@/pages/components/avatar";
+import Loading from "@/pages/components/loading";
 
 import {
   logout,
@@ -216,18 +218,26 @@ export default function SettingPage() {
             <div className="h-0.5 w-full bg-primary-blue rounded-full mt-2" />
             <div className="flex flex-row justify-between items-center mt-6">
               <div className="flex flex-row flex-1 gap-4 items-center">
-                <img
+                {/* <img
                   src="/assets/profile.svg"
                   alt="User Icon"
                   className="block"
-                />
-                <h3 className="font-bold text-base">{email}</h3>
+                /> */}
+                <UserAvatar user={user} size={70} />
+
+                {pageLoading ? (
+                  <div className="flex flex-row justify-start">
+                    <Loading size={8} />
+                  </div>
+                ) : (
+                  <h3 className="font-bold text-base">{email}</h3>
+                )}
               </div>
 
               <div className="flex flex-row justify-between items-center mt-auto gap-4">
                 <ActionButton
                   color={"blue"}
-                  label={"Edit"}
+                  label={"Edit Password"}
                   icon={"edit_square"}
                   onClick={() => setShowPasswordPopup(true)}
                   fill={true}

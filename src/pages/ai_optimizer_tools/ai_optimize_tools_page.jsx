@@ -39,6 +39,7 @@ export default function ArticleOptimizerPage() {
   const [showHighlight, setShowHighlight] = useState(false);
   const [showNameDialogPopup, setShowNameDialogPopup] = useState(false);
   const [showDeletePopup, setShowDeletePopup] = useState(false);
+  const [showAlertPopup, setShowAlertPopup] = useState(false);
   // Determine if sidebar renders at all
   const showSidebar = showSuggestion || showStat || showConfig || showHighlight;
 
@@ -184,133 +185,182 @@ export default function ArticleOptimizerPage() {
   const handleClearInput = () => setInputText("");
 
   const handleOptimizeAll = async () => {
+    if (originalStats.originalWordCount == 0) {
+      setError(
+        "Input content is empty, please incert content in the input content text fields",
+      );
+      setShowAlertPopup(true);
+      return;
+    }
+
     setOutputLoading(true);
     setScoreLoading(true);
     setSuggestionsLoading(true);
-    const rewrite = await AIRequest.rewrite({ content: inputText, tone: tone });
 
-    const [suggest, score] = await Promise.all([
-      AIRequest.suggest({ content: rewrite }),
-      AIRequest.score({ content: rewrite }),
-    ]);
-
-    const cleaned = suggest
-      .replace(/```json/g, "")
-      .replace(/```/g, "")
-      .trim();
-
-    const parsed = JSON.parse(cleaned);
-
-    console.log(score);
-    setOutputText(rewrite);
-    setScore(score);
-    setSuggestions(
-      parsed.map((item, index) => ({
-        id: index + 1,
-        checked: false,
-        text: item.text,
-      })),
-    );
-
-    await fetchWithAuth(`/api/articles/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "updateContent",
+    try {
+      const rewrite = await AIRequest.rewrite({
         content: inputText,
-        optimizedContent: rewrite,
-      }),
-    });
-    await fetchWithAuth(`/api/articles/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "updateScore", aiScore: score }),
-    });
+        tone: tone,
+      });
 
-    setShowHighlight(false);
-    setShowConfig(false);
-    setShowOptimize(true);
-    setShowSuggestion(true);
-    setShowStat(true);
+      const [suggest, score] = await Promise.all([
+        AIRequest.suggest({ content: rewrite }),
+        AIRequest.score({ content: rewrite }),
+      ]);
 
-    setOutputLoading(false);
-    setScoreLoading(false);
-    setSuggestionsLoading(false);
+      const cleaned = suggest
+        .replace(/```json/g, "")
+        .replace(/```/g, "")
+        .trim();
+
+      const parsed = JSON.parse(cleaned);
+
+      console.log(score);
+      setOutputText(rewrite);
+      setScore(score);
+      setSuggestions(
+        parsed.map((item, index) => ({
+          id: index + 1,
+          checked: false,
+          text: item.text,
+        })),
+      );
+
+      await fetchWithAuth(`/api/articles/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "updateContent",
+          content: inputText,
+          optimizedContent: rewrite,
+        }),
+      });
+      await fetchWithAuth(`/api/articles/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "updateScore", aiScore: score }),
+      });
+
+      setShowHighlight(false);
+      setShowConfig(false);
+      setShowOptimize(true);
+      setShowSuggestion(true);
+      setShowStat(true);
+    } catch (error) {
+      console.error("Error in handleOptimizeAll:", error);
+    } finally {
+      setOutputLoading(false);
+      setScoreLoading(false);
+      setSuggestionsLoading(false);
+    }
   };
 
   const handleSuggestions = async () => {
+    if (optimizedStats.optimizedWordCount == 0 || outputIsEmpty) {
+      setError(
+        "Ouput content is empty, please incert or optimize to fill in the output content text fields",
+      );
+      setShowAlertPopup(true);
+      return;
+    }
     setShowHighlight(false);
     setShowSuggestion(true);
     setSuggestionsLoading(true);
-    const suggest = await AIRequest.suggest({ content: outputText });
+    try {
+      const suggest = await AIRequest.suggest({ content: outputText });
 
-    console.log(suggest);
+      console.log(suggest);
 
-    const cleaned = suggest
-      .replace(/```json/g, "")
-      .replace(/```/g, "")
-      .trim();
+      const cleaned = suggest
+        .replace(/```json/g, "")
+        .replace(/```/g, "")
+        .trim();
 
-    const parsed = JSON.parse(cleaned);
+      const parsed = JSON.parse(cleaned);
 
-    setSuggestions(
-      parsed.map((item, index) => ({
-        id: index + 1,
-        checked: false,
-        text: item.text,
-      })),
-    );
-
-    setSuggestionsLoading(false);
+      setSuggestions(
+        parsed.map((item, index) => ({
+          id: index + 1,
+          checked: false,
+          text: item.text,
+        })),
+      );
+    } catch (error) {
+      console.error("Error in handleSuggestions:", error);
+    } finally {
+      setSuggestionsLoading(false);
+    }
   };
 
   const handleOptimizedSuggestion = async () => {
+    if (!selection.text.trim()) {
+      setError(
+        "Selective suggestion required you to select a portion of the content within output content",
+      );
+      setShowAlertPopup(true);
+      return;
+    }
     setShowSuggestion(false);
     setShowHighlight(true);
     setSelectiveLoading(true);
-    console.log("send selective suggestion");
-    console.log("selection:", selection);
-    console.log("type:", typeof selection);
-    const suggestion = await AIRequest.selectiveSuggestion({
-      content: selection.text,
-    });
+    try {
+      console.log("send selective suggestion");
+      console.log("selection:", selection);
+      console.log("type:", typeof selection);
+      const suggestion = await AIRequest.selectiveSuggestion({
+        content: selection.text,
+      });
 
-    console.log(suggestion);
+      console.log(suggestion);
 
-    const cleaned = suggestion
-      .replace(/```json/g, "")
-      .replace(/```/g, "")
-      .trim();
+      const cleaned = suggestion
+        .replace(/```json/g, "")
+        .replace(/```/g, "")
+        .trim();
 
-    const parsed = JSON.parse(cleaned);
-    setSelectiveSuggestions(
-      parsed.map((item, index) => ({
-        id: index + 1,
-        text: item.text,
-      })),
-    );
+      const parsed = JSON.parse(cleaned);
+      setSelectiveSuggestions(
+        parsed.map((item, index) => ({
+          id: index + 1,
+          text: item.text,
+        })),
+      );
 
-    console.log(selectiveSuggestions);
-
-    setSelectiveLoading(false);
+      console.log(selectiveSuggestions);
+    } catch (error) {
+      console.error("Error in handleOptimizedSuggestion:", error);
+    } finally {
+      setSelectiveLoading(false);
+    }
   };
 
   const handleOptimizedScore = async () => {
+    if (optimizedStats.optimizedWordCount == 0 || outputIsEmpty) {
+      setError(
+        "Ouput content is empty, please incert or optimize to fill in the output content text fields",
+      );
+      setShowAlertPopup(true);
+      return;
+    }
     setScoreLoading(true);
-    const score = await AIRequest.score({ content: outputText });
-    console.log(score);
-    setScore(score);
+    try {
+      const score = await AIRequest.score({ content: outputText });
+      console.log(score);
+      setScore(score);
 
-    await fetchWithAuth(`/api/articles/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "updateScore", aiScore: score }),
-    });
+      await fetchWithAuth(`/api/articles/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "updateScore", aiScore: score }),
+      });
 
-    setShowConfig(false);
-    setShowStat(true);
-
-    setScoreLoading(false);
+      setShowConfig(false);
+      setShowStat(true);
+    } catch (error) {
+      console.error("Error in handleOptimizedScore:", error);
+    } finally {
+      setScoreLoading(false);
+    }
   };
 
   const handleSelectSuggestion = (suggestion) => {
@@ -322,6 +372,17 @@ export default function ArticleOptimizerPage() {
   };
 
   const handleAIDescription = async () => {
+    if (
+      originalStats.originalWordCount == 0 ||
+      optimizedStats.optimizedWordCount == 0 ||
+      outputIsEmpty
+    ) {
+      setError(
+        "Content is empty, please incert or optimize to fill in the content text fields",
+      );
+      setShowAlertPopup(true);
+      return;
+    }
     setDescriptionLoading(true);
     try {
       const description = await AIRequest.description({
@@ -345,7 +406,7 @@ export default function ArticleOptimizerPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "updateSaveAs",
-          title: title,
+          title: title || "Untitled Article",
           description: description,
         }),
       });
@@ -425,7 +486,7 @@ export default function ArticleOptimizerPage() {
         {/* toolbar - Fixed text margins for alignment */}
         <Toolbar
           loading={debouncedLoading}
-          title={docTitle || "Untitled"}
+          title={docTitle || "Untitled Article"}
           panels={{
             input: showInput,
             optimize: showOptimize,
@@ -589,6 +650,21 @@ export default function ArticleOptimizerPage() {
         onConfirm={handleDeleteArticle}
         onCancel={() => setShowDeletePopup(false)}
       />{" "}
+      <CustomDialog
+        title="Reminder"
+        message={error}
+        isDelete={false}
+        icon={
+          <img
+            src="/assets/Publish-article-amico.svg"
+            alt="Reminder"
+            className="w-[85%]"
+          />
+        }
+        isOpen={showAlertPopup}
+        onConfirm={() => setShowAlertPopup(false)}
+        onCancel={() => setShowAlertPopup(false)}
+      />
     </div>
   );
 }

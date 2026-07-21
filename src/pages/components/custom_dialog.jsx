@@ -1,5 +1,7 @@
 "use client";
 import { useState } from "react";
+import Loading from "@/pages/components/loading";
+
 export function CustomDialog({
   title = "Delete articles",
   message = "Are you sure you still want to delete 3 selected items?",
@@ -9,6 +11,7 @@ export function CustomDialog({
   isOpen = true,
   isDelete = false,
   isLogOut = false,
+  loading,
 }) {
   const [disabled, setDisabled] = useState(false);
 
@@ -77,7 +80,7 @@ export function CustomDialog({
             disabled={disabled}
             className={`px-6 py-2 ${isDelete ? "bg-accent-red" : "bg-primary-blue"}  text-natural-white font-bold rounded-full hover:opacity-50 transition disabled:opacity-30`}
           >
-            Confirm
+            {loading ? <Loading size={5} /> : "Confirm"}
           </button>
         </div>
       </div>

@@ -66,7 +66,12 @@ export default function SideBarGlobal({ mode }) {
           {/* <div className="material-symbols-outlined text-natural-white text-2xl">
             account_circle
           </div> */}
-          <UserAvatar user={user} size={36} />
+          <div
+            onClick={() => router.push("/setting")}
+            className="cursor-pointer"
+          >
+            <UserAvatar user={user} size={36} />
+          </div>
 
           <div className="flex flex-col items-center justify-start gap-3 w-full">
             {/* quick start menu */}
@@ -116,7 +121,12 @@ export default function SideBarGlobal({ mode }) {
       <div className="w-[17vw] h-screen bg-primary-blue flex flex-col items-center p-4 gap-4">
         {/* Profile Section */}
         <div className="flex flex-col items-center gap-4">
-          <UserAvatar user={user} size={50} />
+          <div
+            onClick={() => router.push("/setting")}
+            className="cursor-pointer"
+          >
+            <UserAvatar user={user} size={50} />
+          </div>
 
           <h3 className="text-xs font-bold text-white">{user.email}</h3>
         </div>

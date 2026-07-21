@@ -39,7 +39,7 @@ export default function ArticleCard({
   isSelected = false,
   isSelectionState = false,
   mode,
-  deletedAt = new Date("2024-06-03"),
+  deletedAt,
   onClick,
   isDeleted = false,
 }) {

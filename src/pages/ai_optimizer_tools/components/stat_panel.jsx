@@ -7,6 +7,7 @@ export default function StatPanel({
   aiScore,
   onOptimizedScore,
 }) {
+  console.log("word count opimize", optimizedWordCount);
   return (
     <div className="bg-tinted-white-blue rounded-xl shadow-md p-4 h-[42vh] grow flex flex-col justify-between">
       <div className="flex items-center justify-between mb-4">

@@ -1,8 +1,10 @@
-import { GoogleGenAI } from "@google/genai";
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { prompts, buildFinalPrompt } from "@/lib/ai/prompts";
 
-const client = new GoogleGenAI({
-  apiKey: process.env.GOOGLE_GEMINI_API_KEY,
+const client = new ChatGoogleGenerativeAI({
+  apiKey: process.env.GEMINI_API_KEY,
+  model: "gemini-3.1-flash-lite",
 });
 
 export async function POST(request) {
@@ -22,22 +24,12 @@ export async function POST(request) {
       { tone },
     );
 
-    const response = await client.models.generateContent({
-      model: "gemini-3.1-flash-lite",
-      // gemini-3.1-flash-lite
-      contents: [
-        {
-          role: "user",
-          parts: [{ text: userPrompt }],
-        },
-      ],
-      systemInstruction: prompts[mode].system,
-    });
+    const response = await client.invoke([
+      new SystemMessage(prompts[mode].system),
+      new HumanMessage(userPrompt),
+    ]);
 
-    const text =
-      response.text ??
-      response.candidates?.[0]?.content?.parts?.[0]?.text ??
-      "";
+    const text = typeof response.content === "string" ? response.content : "";
 
     return Response.json({
       success: true,

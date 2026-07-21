@@ -13,7 +13,7 @@ export function PasswordDialog({ onConfirm, onCancel, isOpen = true, error }) {
       <div className="bg-natural-white rounded-2xl shadow-lg p-4 w-[70vw] min-w-94 max-w-135 border-2 border-primary-blue">
         {/* Header */}
         <div className="flex justify-center items-center pb-4">
-          <h2 className="text-2xl font-bold text-dark-brown">Edit Profile</h2>
+          <h2 className="text-2xl font-bold text-dark-brown">Edit Password</h2>
           {/* <button
             onClick={onCancel}
             className="material-symbols-outlined text-primary-blue hover:opacity-50"

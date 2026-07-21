@@ -27,8 +27,8 @@ export class Article {
     this.userId = userId;
   }
 
-  /**
-   * Factory method for creating new Article instances
+  /*
+    Factory method for creating new Article instances
    */
   static create(userId, title, description, content) {
     const now = new Date();
@@ -48,8 +48,8 @@ export class Article {
     });
   }
 
-  /**
-   * Serialize for database storage
+  /*
+   Serialize for database storage
    */
   toJSON() {
     return {

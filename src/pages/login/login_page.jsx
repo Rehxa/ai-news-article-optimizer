@@ -5,6 +5,7 @@ import { useAuth } from "@/context/auth_context";
 
 import { login, loginWithGoogle } from "@/lib/services/auth/auth_service.js";
 import { useState, useEffect } from "react";
+import Loading from "@/pages/components/loading";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -140,7 +141,7 @@ export default function LoginPage() {
                 onClick={handleLogin}
                 className="mb-5 h-11 w-full rounded-full bg-primary-blue font-semibold text-white shadow transition hover:brightness-110 cursor-pointer"
               >
-                {submitting ? "Login in ..." : "Login"}
+                {submitting ? <Loading size={5} /> : "Login"}
               </button>
 
               {/* Links */}
