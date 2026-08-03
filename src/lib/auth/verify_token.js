@@ -1,5 +1,4 @@
-import crypto from "crypto";
-
+import crypto from "node:crypto";
 const SECRET = process.env.EMAIL_VERIFY_SECRET;
 if (!SECRET) {
   throw new Error("EMAIL_VERIFY_SECRET is not defined");
