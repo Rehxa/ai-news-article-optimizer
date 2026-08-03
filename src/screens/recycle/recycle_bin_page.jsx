@@ -1,8 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { CustomDialog } from "@/pages/components/custom_dialog.jsx";
-import { ArticleWorkspace } from "@/pages/components/article_workspace";
+import { CustomDialog } from "@/screens/components/custom_dialog.jsx";
+import { ArticleWorkspace } from "@/screens/components/article_workspace";
 import { useMultiSelect } from "@/lib/hooks/useMultiSelect";
 import { useArticleListControls } from "@/lib/hooks/useArticleListControls";
 import { useAuth } from "@/context/auth_context";

@@ -1,4 +1,4 @@
-import Loading from "@/pages/components/loading";
+import Loading from "@/screens/components/loading";
 export default function SuggestionPanel({
   suggestions,
   setSuggestions,

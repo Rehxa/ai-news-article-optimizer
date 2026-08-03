@@ -1,8 +1,8 @@
 "use client";
 
-import AuthLayout from "@/pages/components/auth_layout";
+import AuthLayout from "@/screens/components/auth_layout";
 import { useRouter } from "next/navigation";
-import Loading from "@/pages/components/loading";
+import Loading from "@/screens/components/loading";
 import { useState, useEffect } from "react";
 
 export default function RegisterPage() {

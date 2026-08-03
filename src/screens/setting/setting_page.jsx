@@ -2,16 +2,16 @@
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 
-import SideBarGlobal from "@/pages/components/side_bar_global";
-import ActionButton from "@/pages/components/action_button.jsx";
-import { CustomDialog } from "@/pages/components/custom_dialog.jsx";
-import { PasswordDialog } from "@/pages/setting/components/change_password_dialog";
+import SideBarGlobal from "@/screens/components/side_bar_global";
+import ActionButton from "@/screens/components/action_button.jsx";
+import { CustomDialog } from "@/screens/components/custom_dialog.jsx";
+import { PasswordDialog } from "@/screens/setting/components/change_password_dialog";
 import { User } from "@/lib/models";
 import { useAuth } from "@/context/auth_context";
 import { fetchWithAuth } from "@/app/api/auth/fetch_with_auth";
-import InputField from "@/pages/components/input_field";
-import UserAvatar from "@/pages/components/avatar";
-import Loading from "@/pages/components/loading";
+import InputField from "@/screens/components/input_field";
+import UserAvatar from "@/screens/components/avatar";
+import Loading from "@/screens/components/loading";
 
 import {
   logout,

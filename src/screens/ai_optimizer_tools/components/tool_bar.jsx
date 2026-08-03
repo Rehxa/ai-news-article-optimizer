@@ -1,5 +1,5 @@
 "use client";
-import Loading from "@/pages/components/loading";
+import Loading from "@/screens/components/loading";
 
 export default function ToolBar({ panels, onToggle, title, loading }) {
   return (

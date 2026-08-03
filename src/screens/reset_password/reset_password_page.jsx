@@ -1,6 +1,6 @@
 "use client";
 
-import AuthLayout from "@/pages/components/auth_layout";
+import AuthLayout from "@/screens/components/auth_layout";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -8,7 +8,7 @@ import {
   verifyResetCode,
   confirmResetPassword,
 } from "@/lib/services/auth/auth_service";
-import Loading from "@/pages/components/loading";
+import Loading from "@/screens/components/loading";
 
 export default function ResetPasswordPage() {
   const router = useRouter();

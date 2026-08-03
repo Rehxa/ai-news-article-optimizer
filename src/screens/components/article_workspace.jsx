@@ -1,9 +1,9 @@
-import SideBarGlobal from "@/pages/components/side_bar_global";
-import ArticleCard from "@/pages/components/article_card";
-import AddNewCard from "@/pages/components/add_new_card";
-import Pagination from "@/pages/my_article/components/pagination";
-import ActionButton from "@/pages/components/action_button.jsx";
-import Loading from "@/pages/components/loading";
+import SideBarGlobal from "@/screens/components/side_bar_global";
+import ArticleCard from "@/screens/components/article_card";
+import AddNewCard from "@/screens/components/add_new_card";
+import Pagination from "@/screens/my_article/components/pagination";
+import ActionButton from "@/screens/components/action_button.jsx";
+import Loading from "@/screens/components/loading";
 export function ArticleWorkspace({
   articles,
   loading,

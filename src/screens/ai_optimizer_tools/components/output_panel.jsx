@@ -7,21 +7,24 @@ import StarterKit from "@tiptap/starter-kit";
 import TextAlign from "@tiptap/extension-text-align";
 import FontFamily from "@tiptap/extension-font-family";
 import { TextStyle } from "@tiptap/extension-text-style";
-import BulletList from "@tiptap/extension-bullet-list";
-import OrderedList from "@tiptap/extension-ordered-list";
-import ListItem from "@tiptap/extension-list-item";
 import { Selection } from "@tiptap/extensions/selection";
 import Highlight from "@tiptap/extension-highlight";
-import { useEffect, useState } from "react";
-import Loading from "@/pages/components/loading";
 
-export default function InputPanel({
+import Loading from "@/screens/components/loading";
+
+import { useEffect, useState } from "react";
+export default function OutputPanel({
   value,
   onChange,
-  onHandleOptimize,
+  setOutputIsEmpty,
+  onReOpimized,
+  onSelectionChange,
+  selection,
+  setEditorActions,
+  onSelectiveReOpimized,
+  onCopy,
+  copied,
   loading,
-  onClear,
-  optimizeLoading,
 }) {
   const [headingOpen, setHeadingOpen] = useState(false);
 
@@ -45,10 +48,13 @@ export default function InputPanel({
       // OrderedList,
       // ListItem,
       Selection,
+
+      // AiSelectionHighlight,
     ],
     content: value,
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
+      setOutputIsEmpty(editor.isEmpty);
     },
   });
 
@@ -76,6 +82,61 @@ export default function InputPanel({
       editor.off("transaction", update);
     };
   }, [editor]);
+
+  useEffect(() => {
+    if (!editor) return;
+
+    const updateSelection = () => {
+      const { from, to } = editor.state.selection;
+
+      if (from === to) return;
+
+      const text = editor.state.doc.textBetween(from, to);
+
+      onSelectionChange?.({
+        from,
+        to,
+        text,
+      });
+    };
+
+    editor.on("selectionUpdate", updateSelection);
+
+    return () => {
+      editor.off("selectionUpdate", updateSelection);
+    };
+  }, [editor]);
+
+  useEffect(() => {
+    if (!editor) return;
+
+    setEditorActions({
+      replaceSelection: (from, to, text) => {
+        editor.chain().focus().insertContentAt({ from, to }, text).run();
+
+        setTimeout(() => {
+          editor
+            .chain()
+            .focus()
+            .setTextSelection({
+              from,
+              to: from + text.length,
+            })
+            .run();
+        }, 0);
+      },
+    });
+  }, [editor]);
+
+  // useEffect(() => {
+  //   if (!editor) return;
+
+  //   editor.storage.aiSelectionHighlight.from = selection?.from ?? null;
+
+  //   editor.storage.aiSelectionHighlight.to = selection?.to ?? null;
+
+  //   editor.view.dispatch(editor.state.tr);
+  // }, [selection, editor]);
 
   if (!editor) return null;
 
@@ -148,6 +209,35 @@ export default function InputPanel({
       active: editor.isActive("orderedList"),
       onClick: () => editor.chain().focus().toggleOrderedList().run(),
     },
+    { type: "divider" },
+    // {
+    //   type: "button",
+    //   icon: copied ? "check" : "content_copy",
+    //   title: "Copy",
+    //   active: false,
+    //   onClick: () => onCopy(selection.text),
+    // },
+    {
+      type: "button",
+      icon: "cached",
+      title: "Re-optimize",
+      active: false,
+      onClick: onSelectiveReOpimized,
+    },
+    // {
+    //   type: "button",
+    //   icon: "undo",
+    //   title: "Undo",
+    //   active: false,
+    //   onClick: () => editor.chain().focus().undo().run(),
+    // },
+    // {
+    //   type: "button",
+    //   icon: "redo",
+    //   title: "Redo",
+    //   active: false,
+    //   onClick: () => editor.chain().focus().redo().run(),
+    // },
   ];
 
   const getHeading = () => {
@@ -165,13 +255,16 @@ export default function InputPanel({
   };
 
   return (
-    <div className="bg-tinted-white-blue rounded-xl shadow-md p-5 h-full flex flex-1 flex-col justify-between">
+    <div className="bg-tinted-white-blue rounded-xl shadow-md p-5 h-full flex flex-1 flex-col justify-between min-h-0">
+      {/* Header */}
       <div className="flex items-center gap-4 mb-4">
         <div className="material-symbols-outlined text-primary-blue">
-          exit_to_app
+          output
         </div>
-        <h1 className="text-xl font-bold text-dark-brown">Input content</h1>
+        <h1 className="text-xl font-bold text-dark-brown">Output content</h1>
       </div>
+
+      {/* Editor Container */}
       <div className="w-full h-1 grow rounded-lg bg-natural-white p-4 border-1 border-gray-200 flex flex-col overflow-hidden mb-4 min-h-0">
         {/* Floating Toolbar (appears when text selected) */}
         {loading && <Loading />}
@@ -253,21 +346,20 @@ export default function InputPanel({
           />
         </div>
       </div>
-      <div className="flex flex-row items-center justify-between gap-4 mt-4">
-        {/* clear button component */}
+
+      {/* Bottom Toolbar */}
+      <div className="flex items-center gap-2 bg-natural-white rounded-full border-1 border-primary-blue px-3 py-2 w-fit">
         <button
-          className="material-symbols-outlined text-primary-blue flex items-center justify-center bg-natural-white rounded-xl w-10 aspect-square border-1 border-primary-blue box-border  cursor-pointer hover:opacity-90"
-          onClick={onClear}
+          onClick={() => onCopy(editor.getHTML())}
+          className="material-symbols-outlined text-primary-blue hover:opacity-70"
         >
-          cancel
+          {copied ? "check" : "content_copy"}
         </button>
-        {/* button component */}
         <button
-          onClick={onHandleOptimize}
-          disabled={optimizeLoading}
-          className="bg-primary-blue text-white py-2 px-4 rounded-full hover:bg-blue-600 flex flex-row disabled:opacity-60"
+          onClick={onReOpimized}
+          className="material-symbols-outlined text-primary-blue hover:opacity-70"
         >
-          Optimize
+          cached
         </button>
       </div>
     </div>

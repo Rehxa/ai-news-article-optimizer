@@ -1,11 +1,11 @@
 "use client";
-import AuthLayout from "@/pages/components/auth_layout";
+import AuthLayout from "@/screens/components/auth_layout";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth_context";
 
 import { login, loginWithGoogle } from "@/lib/services/auth/auth_service.js";
 import { useState, useEffect } from "react";
-import Loading from "@/pages/components/loading";
+import Loading from "@/screens/components/loading";
 
 export default function LoginPage() {
   const router = useRouter();

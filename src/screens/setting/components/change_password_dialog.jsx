@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import InputField from "@/pages/components/input_field";
+import InputField from "@/screens/components/input_field";
 
 export function PasswordDialog({ onConfirm, onCancel, isOpen = true, error }) {
   if (!isOpen) return null;

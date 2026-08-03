@@ -23,7 +23,7 @@ import { useDebouncedSave } from "@/lib/hooks/useDebouncedSave.js";
 
 import { useAuth } from "@/context/auth_context";
 import { fetchWithAuth } from "@/app/api/auth/fetch_with_auth";
-import SideBarGlobal from "@/pages/components/side_bar_global";
+import SideBarGlobal from "@/screens/components/side_bar_global";
 
 export default function ArticleOptimizerPage() {
   //params

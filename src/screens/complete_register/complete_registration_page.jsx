@@ -1,12 +1,12 @@
 "use client";
 
-import AuthLayout from "@/pages/components/auth_layout";
+import AuthLayout from "@/screens/components/auth_layout";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   linkPasswordToAccount,
   loginWithGoogle,
 } from "@/lib/services/auth/auth_service.js";
-import Loading from "@/pages/components/loading";
+import Loading from "@/screens/components/loading";
 import { useState, useEffect } from "react";
 
 export default function CompleteResgistrationPage() {

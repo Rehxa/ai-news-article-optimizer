@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import Loading from "@/pages/components/loading";
+import Loading from "@/screens/components/loading";
 
 export function CustomDialog({
   title = "Delete articles",

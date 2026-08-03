@@ -1,12 +1,12 @@
 "use client";
-import AddNewCard from "@/pages/components/add_new_card";
-import { CustomDialog } from "@/pages/components/custom_dialog.jsx";
+import AddNewCard from "@/screens/components/add_new_card";
+import { CustomDialog } from "@/screens/components/custom_dialog.jsx";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth_context";
 import { fetchWithAuth } from "@/app/api/auth/fetch_with_auth";
 import { logout } from "@/lib/services/auth/auth_service.js";
-import UserAvatar from "@/pages/components/avatar";
+import UserAvatar from "@/screens/components/avatar";
 
 export default function SideBarGlobal({ mode }) {
   const router = useRouter();
