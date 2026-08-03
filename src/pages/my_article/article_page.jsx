@@ -40,7 +40,6 @@ export default function MyArticlePage() {
 
   useEffect(() => {
     if (authLoading && !user) {
-      // console.log(authLoading, "and", user);
       router.replace("/views/login");
     }
   }, [authLoading, user, router]);
@@ -48,11 +47,9 @@ export default function MyArticlePage() {
   useEffect(() => {
     const fetchArticles = async () => {
       try {
-        console.log(authLoading, "and", user);
         setLoading(true);
         const res = await fetchWithAuth(`/api/articles?userId=${user.uid}`);
         const data = await res.json();
-        console.log("[STEP 3 - CLIENT RAW DATA]", data);
         setAllArticles(data);
       } catch (error) {
         console.error("Error:", error);
@@ -106,7 +103,6 @@ export default function MyArticlePage() {
       const userRes = await fetchWithAuth(`/api/users/${userId}`);
       if (!userRes.ok) throw new Error("Failed to fetch user");
       const userData = await userRes.json();
-      // console.log("User", userData);
 
       const res = await fetchWithAuth("/api/articles", {
         method: "POST",
@@ -122,7 +118,6 @@ export default function MyArticlePage() {
       if (!res.ok) throw new Error("Failed to create article");
 
       const data = await res.json(); // { id, message }
-      console.log("Article created:", data);
       router.push(`/article/${data.id}`);
     } catch (error) {
       console.error("Error creating article:", error);

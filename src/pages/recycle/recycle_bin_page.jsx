@@ -40,16 +40,12 @@ export default function RecycleBinPage() {
     handlePageChange,
   } = useArticleListControls(allArticles);
 
-  // const userId = "user_001";
   const { user, loading: authLoading } = useAuth();
 
   useEffect(() => {
     if (authLoading && !user) {
-      console.log(authLoading, "and", user);
       router.replace("/views/login");
     }
-    // const userId = "user_001";
-    // const userId = user.uid;
   }, [authLoading, user, router]);
 
   useEffect(() => {
@@ -61,15 +57,6 @@ export default function RecycleBinPage() {
         );
         const data = await res.json();
         setAllArticles(data);
-        console.log(
-          "[STEP 5 - fectching CHECK]",
-          allArticles.map((a) => ({
-            id: a.id,
-            title: a.title,
-            selected: selectedIds.has(a.id),
-            isInBin: a.isInBin,
-          })),
-        );
       } catch (error) {
         console.error("Error:", error);
       } finally {

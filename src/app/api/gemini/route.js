@@ -29,6 +29,9 @@ export async function POST(request) {
       new HumanMessage(userPrompt),
     ]);
 
+    // console.log(response.response_metadata);
+    console.log(JSON.stringify(response.response_metadata, null, 2));
+
     const text = typeof response.content === "string" ? response.content : "";
 
     return Response.json({

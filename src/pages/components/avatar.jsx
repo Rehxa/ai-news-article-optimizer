@@ -1,9 +1,7 @@
 "use client";
 
 export default function UserAvatar({ user, size = 40 }) {
-  const letter = (user?.displayName || user?.email || "?")
-    .charAt(0)
-    .toUpperCase();
+  const letter = (user?.email || "?").charAt(0).toUpperCase();
 
   return (
     <div
@@ -13,7 +11,7 @@ export default function UserAvatar({ user, size = 40 }) {
       {user?.photoURL ? (
         <img
           src={user.photoURL}
-          alt={user.displayName || "User avatar"}
+          alt={"User avatar"}
           className="w-full h-full object-cover"
           referrerPolicy="no-referrer"
         />

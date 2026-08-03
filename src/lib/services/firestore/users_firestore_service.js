@@ -46,7 +46,7 @@ export async function getUserById(userId) {
 
 /**
  * Create a new user
- * Note: Password is NOT stored in Firestore—Firebase Auth handles it
+ * Firestore—Firebase Auth handles it
  */
 export async function createUser(userId, email) {
   try {
@@ -78,28 +78,3 @@ export async function updateUserToneOfVoice(userId, toneOfVoice) {
     throw error;
   }
 }
-
-// /**
-//  * Deletes a user's Firestore data: their articles + their user doc.
-//  */
-// export async function deleteUserData(uid) {
-//   const batch = adminDb.batch();
-
-//   // 1. Find all articles owned by this user
-//   const articlesSnap = await adminDb
-//     .collection("articles")
-//     .where("createdBy", "==", uid)
-//     .get();
-
-//   articlesSnap.forEach((doc) => {
-//     batch.delete(doc.ref);
-//   });
-
-//   // 2. Delete the user doc itself
-//   const userRef = adminDb.collection("users").doc(uid);
-//   batch.delete(userRef);
-
-//   await batch.commit();
-
-//   return { deletedArticles: articlesSnap.size };
-// }

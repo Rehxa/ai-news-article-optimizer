@@ -14,12 +14,6 @@ export function PasswordDialog({ onConfirm, onCancel, isOpen = true, error }) {
         {/* Header */}
         <div className="flex justify-center items-center pb-4">
           <h2 className="text-2xl font-bold text-dark-brown">Edit Password</h2>
-          {/* <button
-            onClick={onCancel}
-            className="material-symbols-outlined text-primary-blue hover:opacity-50"
-          >
-            cancel
-          </button> */}
         </div>
 
         {/* Divider */}
@@ -35,28 +29,6 @@ export function PasswordDialog({ onConfirm, onCancel, isOpen = true, error }) {
           />
           <div className="bg-natural-grey-blue grow h-[30%] rounded-xl flex flex-col items-start justify-between gap-4 p-6">
             <h3 className="font-bold">Password</h3>
-            {/* <input
-              title="Older password"
-              type="password"
-              placeholder="Enter old password"
-              className="border-1 border-primary-blue bg-natural-white rounded-lg p-2 w-full focus:border-2 focus:border-primary-blue focus:outline-none"
-              onChange={(e) => setDraftOldPassword(e.target.value)}
-              value={draftOldPassword}
-            />
-            <input
-              type="password"
-              placeholder="Enter new password"
-              className="border-1 border-primary-blue bg-natural-white rounded-lg p-2 w-full focus:border-2 focus:border-primary-blue focus:outline-none"
-              onChange={(e) => setDraftNewPassword(e.target.value)}
-              value={draftNewPassword}
-            />
-            <input
-              type="password"
-              placeholder="Re-enter new password"
-              className="border-1 border-primary-blue bg-natural-white rounded-lg p-2 w-full focus:border-2 focus:border-primary-blue focus:outline-none"
-              onChange={(e) => setDraftReEnterPassword(e.target.value)}
-              value={draftReEnterPassword}
-            /> */}
             <form action="" className="flex  flex-col gap-4">
               <InputField
                 id={"old password"}

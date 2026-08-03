@@ -10,7 +10,7 @@ export async function verifyFirebaseToken(request) {
 
   try {
     const decodedToken = await adminAuth.verifyIdToken(token);
-    console.log({ user: decodedToken });
+    // console.log({ user: decodedToken });
     return { user: decodedToken };
   } catch (err) {
     return { error: "Invalid or expired token", status: 401 };

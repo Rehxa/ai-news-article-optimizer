@@ -77,26 +77,10 @@ export default function ArticleOptimizerPage() {
 
   useEffect(() => {
     if (authLoading && !user) {
-      console.log(authLoading, "and", user);
       router.replace("/views/login");
     }
-    // const userId = "user_001";
-    // const userId = user.uid;
   }, [authLoading, user, router]);
 
-  // const article = useMemo(
-  //   () => new Article(getMockArticleById("article_001")),
-  //   [],
-  // );
-
-  // //init data
-  // useEffect(() => {
-  //   setInputText(article.content);
-  //   setScore(article.aiScore);
-  //   // setOutputText(article.content);
-  // }, [article]);
-
-  // const userId = "user_001";
   useEffect(() => {
     const fetchArticle = async () => {
       try {
@@ -133,7 +117,7 @@ export default function ArticleOptimizerPage() {
         }),
       });
     } catch (error) {
-      console.log("Debounced saved fail: " + error);
+      console.error("Debounced saved fail: " + error);
     } finally {
       setDebouncedLoading(false);
     }
@@ -152,7 +136,7 @@ export default function ArticleOptimizerPage() {
         }),
       });
     } catch (error) {
-      console.log("Debounced saved fail: " + error);
+      console.error("Debounced saved fail: " + error);
     } finally {
       setDebouncedLoading(false);
     }
@@ -215,7 +199,6 @@ export default function ArticleOptimizerPage() {
 
       const parsed = JSON.parse(cleaned);
 
-      console.log(score);
       setOutputText(rewrite);
       setScore(score);
       setSuggestions(
@@ -269,8 +252,6 @@ export default function ArticleOptimizerPage() {
     try {
       const suggest = await AIRequest.suggest({ content: outputText });
 
-      console.log(suggest);
-
       const cleaned = suggest
         .replace(/```json/g, "")
         .replace(/```/g, "")
@@ -304,14 +285,9 @@ export default function ArticleOptimizerPage() {
     setShowHighlight(true);
     setSelectiveLoading(true);
     try {
-      console.log("send selective suggestion");
-      console.log("selection:", selection);
-      console.log("type:", typeof selection);
       const suggestion = await AIRequest.selectiveSuggestion({
         content: selection.text,
       });
-
-      console.log(suggestion);
 
       const cleaned = suggestion
         .replace(/```json/g, "")
@@ -325,8 +301,6 @@ export default function ArticleOptimizerPage() {
           text: item.text,
         })),
       );
-
-      console.log(selectiveSuggestions);
     } catch (error) {
       console.error("Error in handleOptimizedSuggestion:", error);
     } finally {
@@ -345,7 +319,6 @@ export default function ArticleOptimizerPage() {
     setScoreLoading(true);
     try {
       const score = await AIRequest.score({ content: outputText });
-      console.log(score);
       setScore(score);
 
       await fetchWithAuth(`/api/articles/${id}`, {
@@ -388,8 +361,7 @@ export default function ArticleOptimizerPage() {
       const description = await AIRequest.description({
         content: outputText || inputText,
       });
-      console.log("AI generated description:", description);
-      console.log("docDescription:", docDescription);
+
       return description;
     } catch (error) {
       console.error("Error generating AI description:", error);

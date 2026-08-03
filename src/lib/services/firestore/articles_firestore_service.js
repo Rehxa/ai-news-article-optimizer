@@ -45,16 +45,6 @@ export async function getArticlesByUserId(userId, excludeBin = true) {
     const snapshot = await getDocs(q);
     const articles = snapshot.docs.map((doc) => {
       const data = doc.data();
-      // const article = new Article({
-      //   id: doc.id,
-      //   ...data,
-      //   createdAt: data.createdAt?.toDate() || new Date(),
-      //   updatedAt: data.updatedAt?.toDate() || new Date(),
-      //   deletedAt: data.deletedAt ? data.deletedAt.toDate() : null,
-      // });
-      // console.log("[STEP 1 - FIRESTORE]", article);
-
-      // return article;
       return {
         id: doc.id,
         userId: data.userId,
@@ -68,7 +58,6 @@ export async function getArticlesByUserId(userId, excludeBin = true) {
       };
     });
 
-    console.log("[STEP 1 - FINAL OUTPUT]", articles);
     return articles;
   } catch (error) {
     console.error("Error fetching articles:", error);

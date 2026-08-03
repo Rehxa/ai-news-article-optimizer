@@ -16,7 +16,6 @@ export default function LoginPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    //? after sign up need user to login, but it seem this check if user login or not.
     if (!authLoading && user) {
       router.replace("/my_article");
     }
@@ -66,7 +65,6 @@ export default function LoginPage() {
           break;
 
         case "auth/cancelled-popup-request":
-          // Usually ignore this one because it happens when multiple popups are requested.
           break;
 
         case "auth/network-request-failed":

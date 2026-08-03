@@ -24,7 +24,6 @@ export default function SideBarGlobal({ mode }) {
       const userRes = await fetchWithAuth(`/api/users/${userId}`);
       if (!userRes.ok) throw new Error("Failed to fetch user");
       const userData = await userRes.json();
-      // console.log("User", userData);
 
       const res = await fetchWithAuth("/api/articles", {
         method: "POST",
@@ -40,7 +39,6 @@ export default function SideBarGlobal({ mode }) {
       if (!res.ok) throw new Error("Failed to create article");
 
       const data = await res.json(); // { id, message }
-      console.log("Article created:", data);
       router.push(`/article/${data.id}`);
     } catch (error) {
       console.error("Error creating article:", error);
@@ -63,9 +61,6 @@ export default function SideBarGlobal({ mode }) {
       <div className="w-[4vw] h-full bg-primary-blue flex flex-col items-center justify-between px-4 py-4">
         {/* Top Section: Profile + Navigation items */}
         <div className="flex flex-col items-center justify-start gap-8 w-full">
-          {/* <div className="material-symbols-outlined text-natural-white text-2xl">
-            account_circle
-          </div> */}
           <div
             onClick={() => router.push("/setting")}
             className="cursor-pointer"

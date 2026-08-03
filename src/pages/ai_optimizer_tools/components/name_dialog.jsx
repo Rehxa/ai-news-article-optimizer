@@ -26,12 +26,6 @@ export function NameDialog({
         {/* Header */}
         <div className="flex justify-center items-center pb-4">
           <h2 className="text-2xl font-bold text-dark-brown">{title}</h2>
-          {/* <button
-            onClick={onCancel}
-            className="material-symbols-outlined text-primary-blue hover:opacity-50"
-          >
-            cancel
-          </button> */}
         </div>
 
         {/* Divider */}

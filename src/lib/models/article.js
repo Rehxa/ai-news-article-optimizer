@@ -23,29 +23,8 @@ export class Article {
     this.updatedAt = updatedAt;
     this.deletedAt = deletedAt;
     this.overrideToneOfVoice = overrideToneOfVoice;
-    this.aiScore = aiScore; // Double: optimization quality score (0-100)
+    this.aiScore = aiScore;
     this.userId = userId;
-  }
-
-  /*
-    Factory method for creating new Article instances
-   */
-  static create(userId, title, description, content) {
-    const now = new Date();
-    return new Article({
-      id: null, // Will be assigned by Firestore
-      title,
-      description,
-      content,
-      optimizedContent: "",
-      isInBin: false,
-      createdAt: now,
-      updatedAt: now,
-      deletedAt: null,
-      overrideToneOfVoice: null,
-      aiScore: 0,
-      userId,
-    });
   }
 
   /*

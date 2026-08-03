@@ -11,18 +11,6 @@ export class User {
   }
 
   /*
-    Factory method for creating new User instances
-   */
-  static create(email, password) {
-    return new User({
-      id: null, // Will be assigned by Firebase/Firestore
-      email,
-      createdAt: new Date(),
-      toneOfVoice: "professional",
-    });
-  }
-
-  /*
     Serialize for database storage
    */
   toJSON() {

@@ -29,15 +29,6 @@ export function ArticleWorkspace({
   onPageChange,
   totalCount,
 }) {
-  // console.log(
-  //   "[STEP 4 - WORKSPACE CHECK]",
-  //   articles.map((a) => ({
-  //     id: a.id,
-  //     title: a.title,
-  //     selected: selectedIds.has(a.id),
-  //   })),
-  // );
-
   return (
     <>
       {/* Side Bar */}
@@ -122,11 +113,9 @@ export function ArticleWorkspace({
               />
             </div>
             {/* Article Cards */}
-            {/* <div className="grid grid-cols-5 grid-rows-3 gap-2"> */}
             <div className="grid grid-cols-[repeat(auto-fill,minmax(196px,1fr))] justify-center place-items-center gap-4 overflow-y-scroll no-scrollbar pb-2">
               {/* tobe add */}
               {mode == "my_article" && <AddNewCard onClick={onCreateArticle} />}
-              {/* <div className="flex flex-wrap gap-4 w-fit "> */}
               {articles.map((a) => (
                 <ArticleCard
                   key={a.id}
@@ -149,8 +138,6 @@ export function ArticleWorkspace({
               ))}
             </div>
             <div className="w-full bg-natural-grey-blue mt-auto">
-              {/* <p>pagination</p> */}
-              {/* <Pagination /> */}
               <Pagination
                 currentPage={currentPage}
                 totalPages={totalPages}

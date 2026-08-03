@@ -1,4 +1,3 @@
-// lib/hooks/useDebouncedSave.js
 import { useEffect, useRef } from "react";
 
 export function useDebouncedSave(value, delay, saveFn) {
@@ -11,7 +10,7 @@ export function useDebouncedSave(value, delay, saveFn) {
     }
 
     const timer = setTimeout(() => {
-      console.log(`[useDebouncedSave] Saving after ${delay}ms:`, value);
+      // console.log(`[useDebouncedSave] Saving after ${delay}ms:`, value);
 
       saveFn(value);
     }, delay);

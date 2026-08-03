@@ -93,8 +93,6 @@ export default function OutputPanel({
 
       const text = editor.state.doc.textBetween(from, to);
 
-      console.log(text);
-
       onSelectionChange?.({
         from,
         to,
@@ -202,7 +200,6 @@ export default function OutputPanel({
       active: editor.isActive("bulletList"),
       onClick: () => {
         editor.chain().focus().toggleBulletList().run();
-        console.log(editor.getJSON());
       },
     },
     {
@@ -264,7 +261,7 @@ export default function OutputPanel({
         <div className="material-symbols-outlined text-primary-blue">
           output
         </div>
-        <h1 className="text-xl font-bold text-dark-brown">output content</h1>
+        <h1 className="text-xl font-bold text-dark-brown">Output content</h1>
       </div>
 
       {/* Editor Container */}
@@ -352,31 +349,6 @@ export default function OutputPanel({
 
       {/* Bottom Toolbar */}
       <div className="flex items-center gap-2 bg-natural-white rounded-full border-1 border-primary-blue px-3 py-2 w-fit">
-        {/* {toolbarItems.map((item, index) => {
-          switch (item.type) {
-            case "button":
-              return <ToolbarButton key={index} {...item} />;
-
-            case "divider":
-              return <ToolbarDivider key={index} />;
-
-            case "heading-dropdown":
-              return (
-                <div key={index}>
-                  <HeadingDropDownMenu
-                    setHeadingOpen={setHeadingOpen}
-                    headingIcon={getIcon()}
-                    headingLabel={getHeading()}
-                    headingOpen={headingOpen}
-                    headings={headings}
-                  />
-                </div>
-              );
-            default:
-              return null;
-          }
-        })}
-        <ToolbarDivider /> */}
         <button
           onClick={() => onCopy(editor.getHTML())}
           className="material-symbols-outlined text-primary-blue hover:opacity-70"

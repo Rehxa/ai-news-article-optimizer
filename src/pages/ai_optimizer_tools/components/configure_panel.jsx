@@ -17,16 +17,6 @@ export default function ConfigPanel({ onToneOfVoice, tone }) {
         </div>
       </div>
 
-      {/* <h3 className="font-bold">Instruction</h3>
-      <div className="w-full rounded-lg bg-natural-white p-2 no-scrollbar border-1 border-primary-blue">
-        <textarea
-          name="content"
-          id=""
-          placeholder="Customize your own instruction"
-          className="w-full h-full resize-none outline-none text-xs"
-        ></textarea>
-      </div> */}
-
       <div className="flex flex-col justify-start items-start gap-4">
         <h3 className="font-bold text-dark-brown">Tone of voice</h3>
         <select
@@ -49,12 +39,6 @@ export default function ConfigPanel({ onToneOfVoice, tone }) {
           new tone result
         </span>
       </div>
-
-      {/* <div className="flex flex-row justify-end">
-        <button className="w-1/3 bg-primary-blue text-white py-1 px-2 rounded-full hover:bg-blue-600">
-          Confirm
-        </button>
-      </div> */}
     </div>
   );
 }

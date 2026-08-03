@@ -1,14 +1,18 @@
 "use client";
 
 import AuthLayout from "@/pages/components/auth_layout";
-import { useRouter } from "next/navigation";
-import { register, loginWithGoogle } from "@/lib/services/auth/auth_service.js";
+import { useRouter, useSearchParams } from "next/navigation";
+import {
+  linkPasswordToAccount,
+  loginWithGoogle,
+} from "@/lib/services/auth/auth_service.js";
 import Loading from "@/pages/components/loading";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-export default function SignPage() {
+export default function CompleteResgistrationPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
+  const [token, setToken] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -23,81 +27,92 @@ export default function SignPage() {
 
     setSubmitting(true);
     try {
-      await register(email, password);
+      const res = await fetch("/api/auth/complete-registration", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          token,
+          password,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.needsLinking) {
+        try {
+          await loginWithGoogle();
+          await linkPasswordToAccount(password);
+
+          router.push("/views/login");
+          return;
+        } catch (error) {
+          console.error(error);
+
+          setError(
+            error instanceof Error
+              ? error.message
+              : "Unable to link your Google account.",
+          );
+
+          return;
+        }
+      }
+
       router.push("/views/login");
     } catch (error) {
       switch (error.code) {
-        case "auth/email-already-in-use":
-          setError("An account with this email already exists.");
+        case "auth/popup-closed-by-user":
+          setError("Google sign-in was cancelled.");
           break;
 
-        case "auth/invalid-email":
-          setError("Please enter a valid email address.");
+        case "auth/popup-blocked":
+          setError("Your browser blocked the Google sign-in popup.");
           break;
 
-        case "auth/weak-password":
-          setError("Password must be at least 6 characters long.");
-          break;
-
-        case "auth/network-request-failed":
-          setError("Network error. Check your internet connection.");
-          break;
-
-        case "auth/too-many-requests":
-          setError("Too many attempts. Please try again later.");
-          break;
-
-        case "auth/operation-not-allowed":
-          setError("Email/password sign up is currently unavailable.");
+        case "auth/credential-already-in-use":
+          setError("This password is already linked to another account.");
           break;
 
         default:
-          setError("Unable to create your account. Please try again.");
-          console.error(error);
+          setError(error.message || "Unable to complete registration.");
       }
     } finally {
       setSubmitting(false);
     }
   };
 
-  // const handleGoogleSignIn = async () => {
-  //   setError("");
-  //   setSubmitting(true);
-  //   try {
-  //     await loginWithGoogle();
-  //     router.replace("/my_article");
-  //   } catch (error) {
-  //     switch (error.code) {
-  //       case "auth/popup-closed-by-user":
-  //         setError("Google sign-in was cancelled.");
-  //         break;
+  const searchParams = useSearchParams();
 
-  //       case "auth/popup-blocked":
-  //         setError("Your browser blocked the sign-in popup.");
-  //         break;
+  useEffect(() => {
+    const token = searchParams.get("token");
 
-  //       case "auth/cancelled-popup-request":
-  //         // Usually ignore this one because it happens when multiple popups are requested.
-  //         break;
+    if (!token) {
+      setError("Invalid registration link.");
+      return;
+    }
 
-  //       case "auth/network-request-failed":
-  //         setError("Network error. Check your internet connection.");
-  //         break;
+    setToken(token);
 
-  //       case "auth/account-exists-with-different-credential":
-  //         setError(
-  //           "An account with this email already exists using a different sign-in method.",
-  //         );
-  //         break;
+    async function verifyRegistration() {
+      try {
+        const res = await fetch(`/api/auth/verify-token?token=${token}`);
 
-  //       default:
-  //         setError("Unable to sign in with Google. Please try again.");
-  //         console.error(error);
-  //     }
-  //   } finally {
-  //     setSubmitting(false);
-  //   }
-  // };
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error);
+        }
+
+        setEmail(data.email);
+      } catch (err) {
+        setError(err.message);
+      }
+    }
+
+    verifyRegistration();
+  }, []);
 
   return (
     <AuthLayout
@@ -112,18 +127,14 @@ export default function SignPage() {
             {/* Sign Card */}
             <div className="rounded-xl bg-tinted-white-blue p-10 shadow-lg">
               {/* Email */}
-              <div className="mb-3 flex h-14 items-center gap-3 rounded-lg bg-white px-5 shadow">
-                <span className="material-symbols-outlined text-xl text-primary-blue">
+              <div className="mb-3 flex h-14 items-center gap-3 px-5">
+                <span className="material-symbols-outlined text-2xl font-bold text-primary-blue">
                   mail
                 </span>
 
-                <input
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  type="email"
-                  placeholder="Email"
-                  className="w-full bg-transparent text-sm outline-none placeholder:text-gray-400"
-                />
+                <p className="text-lg font-bold text-gray-700">
+                  {email || "Loading email..."}
+                </p>
               </div>
 
               {/* Password */}
@@ -182,23 +193,6 @@ export default function SignPage() {
                 </p>
               </div>
             </div>
-
-            {/* Divider */}
-            {/* <p className="mt-3.5 mb-3.5 text-center text-gray-600">Or</p> */}
-
-            {/* Google Login */}
-            {/* <button
-              onClick={handleGoogleSignIn}
-              className="flex h-12 w-full items-center justify-center gap-3 rounded-full bg-natural-grey-blue shadow transition hover:bg-[#d6e8fb] cursor-pointer z-10"
-            >
-              <img
-                src={"/assets/Google-logo.svg"}
-                alt="Google"
-                className="h-5 w-5"
-              />
-
-              <span className="font-semibold">Sign in with Google</span>
-            </button> */}
           </div>
         </>
       }

@@ -17,6 +17,7 @@ import {
   logout,
   changePassword,
   deleteAccount,
+  canChangePassword,
 } from "@/lib/services/auth/auth_service.js";
 
 export default function SettingPage() {
@@ -35,18 +36,17 @@ export default function SettingPage() {
   const [email, setEmail] = useState("");
 
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+
   const [error, setError] = useState("");
 
   const { user, loading: authLoading } = useAuth();
 
+  const showChangePassword = canChangePassword();
+
   useEffect(() => {
     if (authLoading && !user) {
-      console.log(authLoading, "and", user);
       router.replace("/views/login");
     }
-    // const userId = "user_001";
-    // const userId = user.uid;
   }, [authLoading, user, router]);
 
   useEffect(() => {
@@ -57,7 +57,6 @@ export default function SettingPage() {
         if (!res.ok) throw new Error("Failed to fetch user");
         const data = await res.json();
         setSetting(new User(data));
-        console.log("setting:" + setting);
       } catch (error) {
         console.error("Error fetching article:", error);
       } finally {
@@ -106,18 +105,11 @@ export default function SettingPage() {
     setError(null);
     setLoading(true);
 
-    // if (!password) {
-    //   setError("Please fill in all fields.");
-    //   return;
-    // }
-
     try {
-      await deleteAccount(password); // password is null/undefined for Google users, fine either way
-      await logout(); // clear local auth state
-      router.push("/login"); // or wherever you want to land post-deletion
+      await deleteAccount(password);
+      await logout();
+      router.push("/login");
     } catch (error) {
-      // console.error("Error deleting account:", error);
-
       switch (error.code) {
         case "auth/wrong-password":
         case "auth/invalid-credential":
@@ -156,7 +148,6 @@ export default function SettingPage() {
       }
 
       setShowDeleteHistoryPopup(false);
-      // if the current page displays article lists, trigger a refetch here
     } catch (error) {
       console.error("Error clearing history:", error);
       setError(error.message || "Something went wrong. Please try again.");
@@ -206,7 +197,7 @@ export default function SettingPage() {
     <div className="bg-natural-white w-screen h-screen flex justify-between items-center">
       <SideBarGlobal mode="settings" />
 
-      <div className="w-full h-screen flex flex-col justify-start p-5 gap-5 bg-natural-grey-blue">
+      <div className="w-full h-screen flex flex-col justify-start p-5 gap-5 bg-natural-white">
         {/* Title */}
         <h1 className="font-bold text-5xl">Settings</h1>
         {/* Divider */}
@@ -218,11 +209,6 @@ export default function SettingPage() {
             <div className="h-0.5 w-full bg-primary-blue rounded-full mt-2" />
             <div className="flex flex-row justify-between items-center mt-6">
               <div className="flex flex-row flex-1 gap-4 items-center">
-                {/* <img
-                  src="/assets/profile.svg"
-                  alt="User Icon"
-                  className="block"
-                /> */}
                 <UserAvatar user={user} size={70} />
 
                 {pageLoading ? (
@@ -235,13 +221,15 @@ export default function SettingPage() {
               </div>
 
               <div className="flex flex-row justify-between items-center mt-auto gap-4">
-                <ActionButton
-                  color={"blue"}
-                  label={"Edit Password"}
-                  icon={"edit_square"}
-                  onClick={() => setShowPasswordPopup(true)}
-                  fill={true}
-                />
+                {showChangePassword && (
+                  <ActionButton
+                    color={"blue"}
+                    label={"Edit Password"}
+                    icon={"edit_square"}
+                    onClick={() => setShowPasswordPopup(true)}
+                    fill={true}
+                  />
+                )}
                 <ActionButton
                   color={"blue"}
                   label={"Log out"}
@@ -312,19 +300,21 @@ export default function SettingPage() {
             <div className="material-symbols-rounded text-accent-red !text-7xl !font-bold">
               delete
             </div>
-            <div className="flex flex-col mt-6">
-              <InputField
-                id={"Confirm password"}
-                type={"password"}
-                label={"Required password"}
-                onChange={(e) => setPassword(e.target.value)}
-                value={password}
-                isDelete={true}
-              />
-              <div className="rounded text-accent-red text-xs p-1 mb-4">
-                {error ? error : ""}
+            {showChangePassword && (
+              <div className="flex flex-col mt-6">
+                <InputField
+                  id={"Confirm password"}
+                  type={"password"}
+                  label={"Required password"}
+                  onChange={(e) => setPassword(e.target.value)}
+                  value={password}
+                  isDelete={true}
+                />
+                <div className="rounded text-accent-red text-xs p-1 mb-4">
+                  {error ? error : ""}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         }
         isOpen={showDeleteAccountPopup}

@@ -45,8 +45,6 @@ export default function InputPanel({
       // OrderedList,
       // ListItem,
       Selection,
-
-      // AiSelectionHighlight,
     ],
     content: value,
     onUpdate: ({ editor }) => {
@@ -141,7 +139,6 @@ export default function InputPanel({
       active: editor.isActive("bulletList"),
       onClick: () => {
         editor.chain().focus().toggleBulletList().run();
-        console.log(editor.getJSON());
       },
     },
     {
@@ -151,28 +148,6 @@ export default function InputPanel({
       active: editor.isActive("orderedList"),
       onClick: () => editor.chain().focus().toggleOrderedList().run(),
     },
-    // { type: "divider" },
-    // {
-    //   type: "button",
-    //   icon: "content_copy",
-    //   title: "Copy",
-    //   active: false,
-    //   onClick: () => {},
-    // },
-    // {
-    //   type: "button",
-    //   icon: "undo",
-    //   title: "Undo",
-    //   active: false,
-    //   onClick: () => editor.chain().focus().undo().run(),
-    // },
-    // {
-    //   type: "button",
-    //   icon: "redo",
-    //   title: "Redo",
-    //   active: false,
-    //   onClick: () => editor.chain().focus().redo().run(),
-    // },
   ];
 
   const getHeading = () => {

@@ -1,4 +1,4 @@
-import SignUpPage from "@/pages/signup/signup_page";
+import Register from "@/pages/register/register_page";
 export default function Page() {
-  return <SignUpPage />;
+  return <Register />;
 }

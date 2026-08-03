@@ -5,6 +5,7 @@ import {
   sendPasswordResetEmail,
   fetchSignInMethodsForEmail,
   EmailAuthProvider,
+  linkWithCredential,
   reauthenticateWithCredential,
   reauthenticateWithPopup,
   updatePassword,
@@ -54,21 +55,55 @@ export async function logout() {
   return signOut(auth);
 }
 
-export async function register(email, password) {
-  // return createUserWithEmailAndPassword(auth, email, password);
-  const cred = await createUserWithEmailAndPassword(auth, email, password);
-  await createUser(cred.user.uid, cred.user.email);
-  return cred.user;
-}
+// export async function register(email, password, token) {
+//   // return createUserWithEmailAndPassword(auth, email, password);
+//   try {
+//     const res = await fetch("/api/auth/complete-registration", {
+//       method: "POST",
+//       headers: {
+//         "Content-Type": "application/json",
+//       },
+//       body: JSON.stringify({
+//         token,
+//         password,
+//       }),
+//     });
+
+//     const data = await res.json();
+
+//     if (!res.ok) {
+//       throw new Error(data.error || "Registration failed");
+//     }
+
+//     const cred = await createUserWithEmailAndPassword(auth, email, password);
+//     await createUser(cred.user.uid, cred.user.email);
+//     return cred.user;
+//   } catch (error) {
+//     console.error("Register failed:", error);
+//     throw error;
+//   }
+// }
 
 // --- Forgot password (unauthenticated) ---
 
+// export async function resetPassword(email) {
+//   const actionCodeSettings = {
+//     url: `${window.location.origin}/views/reset_password`,
+//     handleCodeInApp: true,
+//   };
+//   await sendPasswordResetEmail(auth, email, actionCodeSettings);
+// }
+
 export async function resetPassword(email) {
-  const actionCodeSettings = {
-    url: `${window.location.origin}/views/reset_password`,
-    handleCodeInApp: true,
-  };
-  await sendPasswordResetEmail(auth, email, actionCodeSettings);
+  const res = await fetch("/api/auth/forgot-password", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to send reset email.");
+  }
 }
 
 export async function confirmResetPassword(oobCode, password) {
@@ -119,9 +154,10 @@ export async function deleteAccount(password = null) {
     const credential = EmailAuthProvider.credential(user.email, password);
 
     await reauthenticateWithCredential(user, credential);
-  } else if (provider === "google.com") {
-    await reauthenticateWithPopup(user, googleProvider);
   }
+  // else if (provider === "google.com") {
+  //   await reauthenticateWithPopup(user, googleProvider);
+  // }
 
   const token = await user.getIdToken();
 
@@ -136,4 +172,18 @@ export async function deleteAccount(password = null) {
   }
 
   return res.json();
+}
+
+export function canChangePassword(user = auth.currentUser) {
+  if (!user) return false;
+
+  return user.providerData.some(
+    (provider) => provider.providerId === "password",
+  );
+}
+
+export async function linkPasswordToAccount(password) {
+  const user = auth.currentUser;
+  const credential = EmailAuthProvider.credential(user.email, password);
+  await linkWithCredential(user, credential);
 }

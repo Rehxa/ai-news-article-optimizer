@@ -43,7 +43,6 @@ export async function GET(req) {
 
     // Get active articles
     const articles = await getArticlesByUserId(userId, true);
-    console.log("[STEP 2 - API BEFORE RESPONSE]", articles);
     return Response.json(articles);
   } catch (error) {
     console.error("GET /api/articles error:", error);
