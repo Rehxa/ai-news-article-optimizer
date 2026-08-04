@@ -7,6 +7,7 @@ import { useAuth } from "@/context/auth_context";
 import { fetchWithAuth } from "@/app/api/auth/fetch_with_auth";
 import { logout } from "@/lib/services/auth/auth_service.js";
 import UserAvatar from "@/screens/components/avatar";
+import Loading from "@/screens/components/loading";
 
 export default function SideBarGlobal({ mode }) {
   const router = useRouter();
@@ -109,6 +110,7 @@ export default function SideBarGlobal({ mode }) {
             logout
           </div>
         </div>
+        {creating && <LoadingOverlay />}
       </div>
     );
   } else {
@@ -206,6 +208,8 @@ export default function SideBarGlobal({ mode }) {
           onCancel={() => setShowLogoutPopup(false)}
           isLogOut={true}
         />
+
+        {creating && <LoadingOverlay />}
       </div>
     );
   }
@@ -227,5 +231,13 @@ function SidebarTile({ onClick, icon, label, isActive = false }) {
         {label}
       </span>
     </button>
+  );
+}
+
+function LoadingOverlay() {
+  return (
+    <div className="fixed inset-0 bg-white/50 flex items-center justify-center z-50">
+      <Loading size={10} />
+    </div>
   );
 }
