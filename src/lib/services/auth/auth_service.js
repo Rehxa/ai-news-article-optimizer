@@ -248,7 +248,10 @@ export async function changePassword(oldPassword, newPassword) {
   const user = auth.currentUser;
   if (!user) throw new Error("No authenticated user.");
 
-  if (getAuthProvider(user) !== "password") {
+  // if (getAuthProvider(user) !== "password") {
+  //   throw new Error("This account does not use a password.");
+  // }
+  if (!hasPasswordProvider(user)) {
     throw new Error("This account does not use a password.");
   }
 
@@ -267,13 +270,25 @@ export function getAuthProvider(user = auth.currentUser) {
   return user.providerData[0].providerId;
 }
 
+export function hasPasswordProvider(user = auth.currentUser) {
+  if (!user) return false;
+
+  return user.providerData.some(
+    (provider) => provider.providerId === "password",
+  );
+}
+
 export async function deleteAccount(password = null) {
   const user = auth.currentUser;
   if (!user) throw new Error("No authenticated user.");
 
-  const provider = getAuthProvider(user);
+  // const provider = getAuthProvider(user);
+  // if (!hasPasswordProvider(user)) {
+  //   throw new Error("This account does not use a password.");
+  // }
 
-  if (provider === "password") {
+  // if (provider === "password") {
+  if (hasPasswordProvider(user)) {
     if (!password) throw new Error("Password required to confirm deletion.");
 
     const credential = EmailAuthProvider.credential(user.email, password);
