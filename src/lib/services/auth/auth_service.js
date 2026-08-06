@@ -12,6 +12,8 @@ import {
   signOut,
   verifyPasswordResetCode,
   confirmPasswordReset,
+  sendEmailVerification,
+  GoogleAuthProvider,
 } from "firebase/auth";
 
 import { auth, db, googleProvider } from "@/lib/firebase/client";
@@ -20,7 +22,12 @@ import { createUser } from "@/lib/services/firestore/users_firestore_service.js"
 import { fetchWithAuth } from "@/app/api/auth/fetch_with_auth";
 
 export async function login(email, password) {
-  return signInWithEmailAndPassword(auth, email, password);
+  const userCredential = await signInWithEmailAndPassword(
+    auth,
+    email,
+    password,
+  );
+  return userCredential.user;
 }
 
 export async function loginWithGoogle() {
@@ -55,6 +62,110 @@ export async function logout() {
   return signOut(auth);
 }
 
+// export async function register(email, password) {
+//   // return createUserWithEmailAndPassword(auth, email, password);
+//   const cred = await createUserWithEmailAndPassword(auth, email, password);
+//   await createUser(cred.user.uid, cred.user.email);
+//   return cred.user;
+// }
+export async function checkEmailAuthState(email) {
+  const res = await fetch("/api/auth/check-email", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+
+  if (!res.ok) {
+    throw new Error("email-check-failed");
+  }
+
+  const { state } = await res.json();
+  return state; // "new" | "google-only" | "password-only" | "both" | "unknown"
+}
+
+export async function register(email, password) {
+  // const methods = await fetchSignInMethodsForEmail(auth, email);
+  // console.log("fetchSignInMethodsForEmail result:", methods);
+
+  // if (methods.includes("google.com")) {
+  //   console.error(
+  //     "Attempted to register with an email already linked to Google:",
+  //     {
+  //       email,
+  //       methods,
+  //     },
+  //   );
+  //   throw new Error("account-exists-google");
+  // }
+
+  const authState = await checkEmailAuthState(email);
+
+  if (authState === "google-only") {
+    throw new Error("account-exists-google");
+  }
+
+  const { user } = await createUserWithEmailAndPassword(auth, email, password);
+
+  await sendEmailVerification(user, {
+    url: `${process.env.NEXT_PUBLIC_APP_URL}/views/login`,
+  });
+
+  await signOut(auth);
+
+  return user;
+}
+
+export async function resendVerificationEmail(email, password) {
+  try {
+    const { user } = await signInWithEmailAndPassword(auth, email, password);
+
+    console.log("Signed in:", {
+      uid: user.uid,
+      email: user.email,
+      emailVerified: user.emailVerified,
+    });
+
+    if (user.emailVerified) {
+      throw new Error("already-verified");
+    }
+
+    await sendEmailVerification(user, {
+      url: `${process.env.NEXT_PUBLIC_APP_URL}/views/login`,
+    });
+
+    return true;
+  } catch (err) {
+    console.error("resendVerificationEmail failed:", {
+      code: err.code,
+      message: err.message,
+      error: err,
+    });
+
+    throw err;
+  } finally {
+    if (auth.currentUser) {
+      await signOut(auth);
+    }
+  }
+}
+
+// export async function resendVerificationEmail(email, password) {
+//   const { user } = await signInWithEmailAndPassword(auth, email, password);
+
+//   if (user.emailVerified) {
+//     await signOut(auth);
+//     throw new Error("already-verified");
+//   }
+
+//   await sendEmailVerification(user, {
+//     url: `${process.env.NEXT_PUBLIC_APP_URL}/views/login`,
+//   });
+
+//   await signOut(auth);
+
+//   return true;
+// }
+
 // export async function register(email, password, token) {
 //   // return createUserWithEmailAndPassword(auth, email, password);
 //   try {
@@ -86,10 +197,24 @@ export async function logout() {
 
 // --- Forgot password (unauthenticated) ---
 
+export async function resetPasswordFirebase(email) {
+  const authState = await checkEmailAuthState(email);
+
+  if (authState === "google-only") {
+    throw new Error("account-exists-google");
+  }
+
+  const actionCodeSettings = {
+    url: `${window.location.origin}/views/reset_password`,
+    handleCodeInApp: true,
+  };
+  await sendPasswordResetEmail(auth, email, actionCodeSettings);
+}
+
 // export async function resetPassword(email) {
 //   const actionCodeSettings = {
-//     url: `${window.location.origin}/views/reset_password`,
-//     handleCodeInApp: true,
+//     url: `${process.env.NEXT_PUBLIC_APP_URL}/views/reset_password`, // or wherever your reset landing page is
+//     handleCodeInApp: false,
 //   };
 //   await sendPasswordResetEmail(auth, email, actionCodeSettings);
 // }
@@ -114,9 +239,9 @@ export async function verifyResetCode(oobCode) {
   return verifyPasswordResetCode(auth, oobCode);
 }
 
-export async function checkSignInMethod(email) {
-  return fetchSignInMethodsForEmail(auth, email);
-}
+// export async function checkSignInMethod(email) {
+//   return fetchSignInMethodsForEmail(auth, email);
+// }
 
 // --- Change password (authenticated, settings page) ---
 export async function changePassword(oldPassword, newPassword) {
@@ -180,6 +305,57 @@ export function canChangePassword(user = auth.currentUser) {
   return user.providerData.some(
     (provider) => provider.providerId === "password",
   );
+}
+
+// export async function linkGoogleAccountWithPassword(email, password) {
+//   const provider = new GoogleAuthProvider();
+//   const { user } = await signInWithPopup(auth, provider);
+
+//   if (user.email !== email) {
+//     await signOut(auth);
+//     throw new Error("google-email-mismatch");
+//   }
+
+//   const providers = user.providerData.map((provider) => provider.providerId);
+
+//   if (providers.includes("password")) {
+//     throw new Error("password-already-linked");
+//   }
+
+//   const credential = EmailAuthProvider.credential(email, password);
+//   await linkWithCredential(user, credential);
+
+//   await signOut(auth);
+
+//   return user;
+// }
+
+export async function linkGoogleAccountWithPassword(email, password) {
+  const provider = new GoogleAuthProvider();
+
+  try {
+    const { user } = await signInWithPopup(auth, provider);
+
+    if (user.email !== email) {
+      throw new Error("google-email-mismatch");
+    }
+
+    const providers = user.providerData.map((provider) => provider.providerId);
+
+    if (providers.includes("password")) {
+      throw new Error("password-already-linked");
+    }
+
+    const credential = EmailAuthProvider.credential(email, password);
+
+    await linkWithCredential(user, credential);
+
+    return user;
+  } finally {
+    if (auth.currentUser) {
+      await signOut(auth);
+    }
+  }
 }
 
 export async function linkPasswordToAccount(password) {

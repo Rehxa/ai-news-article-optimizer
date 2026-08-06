@@ -11,7 +11,11 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      // if (firebaseUser && !firebaseUser.emailVerified) {
+      //   await firebaseUser.reload();
+      //   await firebaseUser.getIdToken(true);
+      // }
       setUser(firebaseUser);
       setLoading(false);
     });
