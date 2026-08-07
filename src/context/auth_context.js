@@ -12,10 +12,6 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      // if (firebaseUser && !firebaseUser.emailVerified) {
-      //   await firebaseUser.reload();
-      //   await firebaseUser.getIdToken(true);
-      // }
       setUser(firebaseUser);
       setLoading(false);
     });

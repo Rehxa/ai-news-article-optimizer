@@ -1,18 +1,38 @@
 "use client";
 
 import AuthLayout from "@/screens/components/auth_layout";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import {
+  register,
+  linkGoogleAccountWithPassword,
+  resendVerificationEmail,
+} from "@/lib/services/auth/auth_service.js";
 import Loading from "@/screens/components/loading";
 import { useState, useEffect } from "react";
+import { CustomDialog } from "@/screens/components/custom_dialog.jsx";
 
-export default function RegisterPage() {
+export default function SignupPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [sent, setSent] = useState(false);
-  const [showSentSnackBar, setShowSentSnackBar] = useState(false);
+
   const [showSentMessage, setShowSentMessage] = useState(false);
+  const [showSentSnackBar, setShowSentSnackBar] = useState(false);
+
+  const [showLinkPrompt, setShowLinkPrompt] = useState(false);
+  const [showResendPrompt, setShowResendPrompt] = useState(false);
+
+  useEffect(() => {
+    const verify = searchParams.get("verify");
+
+    if (verify === "resend") {
+      setShowResendPrompt(true);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (!showSentMessage) return;
@@ -27,45 +47,100 @@ export default function RegisterPage() {
     return () => clearTimeout(timer);
   }, [showSentMessage]);
 
-  const handleSendEmail = async (e) => {
+  const handleSignUp = async (e) => {
     e.preventDefault();
-
-    if (!email) {
-      setError("Please enter your email and name.");
+    if (password !== confirmPassword) {
+      setError("Passwords don't match.");
       return;
     }
 
     setSubmitting(true);
-    setError("");
     try {
-      const res = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
+      await register(email, password);
+      setShowSentMessage(true);
+      setShowResendPrompt(true);
+    } catch (error) {
+      if (error.message === "account-exists-google") {
+        setShowLinkPrompt(true);
 
-      //   const data = await res.json();
-
-      let data = {};
-
-      try {
-        data = await res.json();
-      } catch {
-        data = { error: "Server returned an invalid response." };
-      }
-
-      if (!res.ok) {
-        setError(
-          data.error || "Unable to send verification email. Please try again.",
-        );
         return;
       }
 
+      switch (error.code) {
+        case "auth/email-already-in-use":
+          setError("An account with this email already exists.");
+          break;
+
+        case "auth/invalid-email":
+          setError("Please enter a valid email address.");
+          break;
+
+        case "auth/weak-password":
+          setError("Password must be at least 6 characters long.");
+          break;
+
+        case "auth/network-request-failed":
+          setError("Network error. Check your internet connection.");
+          break;
+
+        case "auth/too-many-requests":
+          setError("Too many attempts. Please try again later.");
+          break;
+
+        case "auth/operation-not-allowed":
+          setError("Email/password sign up is currently unavailable.");
+          break;
+
+        default:
+          setError("Unable to create your account. Please try again.");
+          console.error(error);
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleResend = async () => {
+    setSubmitting(true);
+    try {
+      await resendVerificationEmail(email, password);
       setShowSentMessage(true);
     } catch (err) {
-      setError("Network error. Check your internet connection.");
-      console.error(err);
+      if (err.message === "already-verified") {
+        setError("This account is already verified. Please log in.");
+      } else if (err.code === "auth/invalid-credential") {
+        setError("Incorrect password for this email.");
+      } else if (err.code === "auth/too-many-requests") {
+        setError("Too many attempts. Please try again later.");
+      } else {
+        setError("Unable to resend verification email.");
+      }
+      setShowResendPrompt(true);
     } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleLinkGoogle = async () => {
+    setSubmitting(true);
+    try {
+      await linkGoogleAccountWithPassword(email, password);
+      await resendVerificationEmail(email, password);
+
+      setShowSentMessage(true);
+      setShowResendPrompt(true);
+    } catch (err) {
+      if (err.message === "google-email-mismatch") {
+        setError("Please choose the Google account matching this email.");
+      } else if (err.message === "password-already-linked") {
+        setError(
+          "This email is already linked to a Google account. Please log in with Google.",
+        );
+      } else {
+        setError("Unable to link account. Please try again.");
+      }
+    } finally {
+      setShowLinkPrompt(false);
       setSubmitting(false);
     }
   };
@@ -77,13 +152,15 @@ export default function RegisterPage() {
         <>
           {showSentMessage && (
             <ShowSentEmail email={email} showSentSnackBar={showSentSnackBar} />
-          )}
+          )}{" "}
+          {/* Form */}
           <div className="w-full max-w-md z-10 px-6">
             <h1 className="mb-8 text-5xl font-bold">Sign Up</h1>
 
+            {/* Sign Card */}
             <div className="rounded-xl bg-tinted-white-blue p-10 shadow-lg">
               {/* Email */}
-              <div className="mb-6 flex h-14 items-center gap-3 rounded-lg bg-white px-5 shadow">
+              <div className="mb-3 flex h-14 items-center gap-3 rounded-lg bg-white px-5 shadow">
                 <span className="material-symbols-outlined text-xl text-primary-blue">
                   mail
                 </span>
@@ -97,19 +174,56 @@ export default function RegisterPage() {
                 />
               </div>
 
+              {/* Password */}
+              <div className="mb-3 flex h-14 items-center gap-3 rounded-lg bg-white px-5 shadow">
+                <span className="material-symbols-outlined text-xl text-primary-blue">
+                  key
+                </span>
+
+                <input
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  type="password"
+                  placeholder="Password"
+                  className="w-full bg-transparent text-sm outline-none placeholder:text-gray-400"
+                />
+              </div>
+              {/* Re-Enter Password */}
+              <div className="mb-6 flex h-14 items-center gap-3 rounded-lg bg-white px-5 shadow">
+                <span className="material-symbols-outlined text-xl text-primary-blue">
+                  key
+                </span>
+
+                <input
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  type="password"
+                  placeholder="Re-enter password"
+                  className="w-full bg-transparent text-sm outline-none placeholder:text-gray-400"
+                />
+              </div>
+
               {error && (
-                <div className="rounded-lg text-accent-red p-1 mb-4">
+                <div className="rounded-lg text-accent-red text-xs mb-4">
                   {error}
                 </div>
               )}
 
+              {/* Sign up Button */}
               <button
-                onClick={handleSendEmail}
+                onClick={showResendPrompt ? handleResend : handleSignUp}
                 className="mb-5 h-11 w-full rounded-full bg-primary-blue font-semibold text-white shadow transition hover:brightness-110 cursor-pointer"
               >
-                {submitting ? <Loading size={5} /> : "Verify email"}
+                {submitting ? (
+                  <Loading size={5} />
+                ) : showResendPrompt ? (
+                  "Resend verification email"
+                ) : (
+                  "Sign up"
+                )}
               </button>
 
+              {/* Links */}
               <div className="space-y-1 text-center">
                 <p className="text-sm">
                   Have an account?{" "}
@@ -123,6 +237,21 @@ export default function RegisterPage() {
               </div>
             </div>
           </div>
+          <CustomDialog
+            title="Link Google Account"
+            message="This email is already registered with Google. Would you like to link your Google account to this email?"
+            isDelete={false}
+            icon={
+              <img
+                src={"/assets/Google-logo.svg"}
+                alt="Google"
+                className="h-20 w-20"
+              />
+            }
+            isOpen={showLinkPrompt}
+            onConfirm={handleLinkGoogle}
+            onCancel={() => setShowLinkPrompt(false)}
+          />
         </>
       }
     />

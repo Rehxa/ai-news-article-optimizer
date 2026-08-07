@@ -1,31 +1,48 @@
 "use client";
 import AuthLayout from "@/screens/components/auth_layout";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/auth_context";
 
 import { login, loginWithGoogle } from "@/lib/services/auth/auth_service.js";
+import { sendEmailVerification, signOut } from "firebase/auth";
 import { useState, useEffect } from "react";
 import Loading from "@/screens/components/loading";
+import { auth } from "@/lib/firebase/client";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const justRegistered = searchParams.get("justRegistered") === "true";
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const { user, loading: authLoading } = useAuth();
   const [error, setError] = useState("");
+  const [unverifiedUser, setUnverifiedUser] = useState(null);
+  const [resendStatus, setResendStatus] = useState("");
 
   useEffect(() => {
-    if (!authLoading && user) {
+    if (!authLoading && user && user.emailVerified) {
       router.replace("/my_article");
     }
   }, [authLoading, user, router]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setError("");
+    setUnverifiedUser(null);
     setSubmitting(true);
     try {
-      await login(email, password);
+      const loggedInUser = await login(email, password);
+
+      if (!loggedInUser.emailVerified) {
+        await signOut(auth);
+        setUnverifiedUser(loggedInUser);
+        setError("Please verify your email before logging in.");
+        return;
+      }
+
       router.replace("/my_article");
     } catch (error) {
       switch (error.code) {
@@ -49,10 +66,37 @@ export default function LoginPage() {
     }
   };
 
+  const handleResendVerification = async () => {
+    if (!unverifiedUser) return;
+    setResendStatus("sending");
+    try {
+      await sendEmailVerification(unverifiedUser, {
+        url: `${window.location.origin}/views/login?justRegistered=true`,
+      });
+
+      setResendStatus("sent");
+    } catch (err) {
+      setResendStatus("error");
+      switch (error.code) {
+        case "auth/too-many-requests":
+          setError("Too many verification requests. Please try again later.");
+          break;
+      }
+      console.error(err);
+    }
+  };
+
   const handleGoogleSignIn = async () => {
     setSubmitting(true);
+    setUnverifiedUser(null);
     try {
-      await loginWithGoogle();
+      const loggedInUser = await loginWithGoogle();
+      if (!loggedInUser.emailVerified) {
+        await signOut(auth);
+        setUnverifiedUser(loggedInUser);
+        setError("Please verify your email before logging in.");
+        return;
+      }
       router.replace("/my_article");
     } catch (error) {
       switch (error.code) {
@@ -129,8 +173,28 @@ export default function LoginPage() {
               </div>
 
               {error && (
-                <div className="rounded-lg text-accent-red p-1 mb-2">
+                <div className="rounded-lg text-accent-red text-xs mb-2">
                   {error}
+                </div>
+              )}
+
+              {unverifiedUser && (
+                <div className="mb-2 text-sm">
+                  {resendStatus === "sent" ? (
+                    <span className="text-green-700">
+                      Verification email resent — check your inbox.
+                    </span>
+                  ) : (
+                    <button
+                      onClick={handleResendVerification}
+                      disabled={resendStatus === "sending"}
+                      className="font-semibold text-primary-blue hover:underline cursor-pointer"
+                    >
+                      {resendStatus === "sending"
+                        ? "Sending..."
+                        : "Resend verification email"}
+                    </button>
+                  )}
                 </div>
               )}
 

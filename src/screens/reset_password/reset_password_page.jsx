@@ -4,7 +4,7 @@ import AuthLayout from "@/screens/components/auth_layout";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  resetPassword,
+  resetPasswordFirebase,
   verifyResetCode,
   confirmResetPassword,
 } from "@/lib/services/auth/auth_service";
@@ -80,12 +80,18 @@ export default function ResetPasswordPage() {
     setStatus("submitting");
     setLoading(true);
     try {
-      await resetPassword(email);
+      await resetPasswordFirebase(email);
       setStatus("sent");
     } catch (err) {
-      console.error("resetPassword failed:", err.code, err.message);
-      setError("Something went wrong. Please try again.");
+      console.error("resetPasswordFirebase failed:", err.code, err.message);
+
       setStatus("idle");
+
+      if (err.message === "account-exists-google") {
+        setError("This account has only been registered with Google");
+      } else {
+        setError("Something went wrong. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -267,40 +273,42 @@ function ResetPassword({
   error,
 }) {
   return (
-    <div className="rounded-xl bg-tinted-white-blue p-10 shadow-lg">
-      <div className="mb-3 flex h-14 items-center gap-3 rounded-lg bg-white px-5 shadow">
-        <span className="material-symbols-outlined text-xl text-primary-blue">
-          key
-        </span>
-        <input
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          type="password"
-          placeholder="Password"
-          className="w-full bg-transparent text-sm outline-none placeholder:text-gray-400"
-        />
+    <>
+      <h1 className="mb-8 text-5xl font-bold">Reset Password</h1>
+      <p>Enter your new password below.</p>
+      <div className="rounded-xl bg-tinted-white-blue p-10 shadow-lg">
+        <div className="mb-3 flex h-14 items-center gap-3 rounded-lg bg-white px-5 shadow">
+          <span className="material-symbols-outlined text-xl text-primary-blue">
+            key
+          </span>
+          <input
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            type="password"
+            placeholder="Password"
+            className="w-full bg-transparent text-sm outline-none placeholder:text-gray-400"
+          />
+        </div>
+        <div className="mb-6 flex h-14 items-center gap-3 rounded-lg bg-white px-5 shadow">
+          <span className="material-symbols-outlined text-xl text-primary-blue">
+            key
+          </span>
+          <input
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            type="password"
+            placeholder="Re-enter password"
+            className="w-full bg-transparent text-sm outline-none placeholder:text-gray-400"
+          />
+        </div>
+        {error && <p className="mb-3 text-sm text-red-500">{error}</p>}
+        <button
+          onClick={handleNewPassword}
+          className="mb-5 h-11 w-full rounded-full bg-primary-blue font-semibold text-white shadow transition hover:brightness-110 cursor-pointer"
+        >
+          Change password
+        </button>
       </div>
-      <div className="mb-6 flex h-14 items-center gap-3 rounded-lg bg-white px-5 shadow">
-        <span className="material-symbols-outlined text-xl text-primary-blue">
-          key
-        </span>
-        <input
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          type="password"
-          placeholder="Re-enter password"
-          className="w-full bg-transparent text-sm outline-none placeholder:text-gray-400"
-        />
-      </div>
-
-      {error && <p className="mb-3 text-sm text-red-500">{error}</p>}
-
-      <button
-        onClick={handleNewPassword}
-        className="mb-5 h-11 w-full rounded-full bg-primary-blue font-semibold text-white shadow transition hover:brightness-110 cursor-pointer"
-      >
-        Change password
-      </button>
-    </div>
+    </>
   );
 }
