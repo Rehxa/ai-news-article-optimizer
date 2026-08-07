@@ -140,16 +140,23 @@ export default function SignupPage() {
     setSubmitting(true);
     try {
       await linkGoogleAccountWithPassword(email, password);
+      await register(email, password);
+
       // router.push("/views/login?linked=true");
+      setShowSentMessage(true);
       setShowResendPrompt(true);
     } catch (err) {
       if (err.message === "google-email-mismatch") {
         setError("Please choose the Google account matching this email.");
+      } else if (err.message === "password-already-linked") {
+        setError(
+          "This email is already linked to a Google account. Please log in with Google.",
+        );
       } else {
         setError("Unable to link account. Please try again.");
       }
-      setShowLinkPrompt(false);
     } finally {
+      setShowLinkPrompt(false);
       setSubmitting(false);
     }
   };
