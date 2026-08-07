@@ -89,6 +89,7 @@ export default function LoginPage() {
 
   const handleGoogleSignIn = async () => {
     setSubmitting(true);
+    setUnverifiedUser(null);
     try {
       const loggedInUser = await loginWithGoogle();
       if (!loggedInUser.emailVerified) {

@@ -140,7 +140,8 @@ export default function SignupPage() {
     setSubmitting(true);
     try {
       await linkGoogleAccountWithPassword(email, password);
-      await register(email, password);
+      // await register(email, password);
+      await resendVerificationEmail(email, password);
 
       // router.push("/views/login?linked=true");
       setShowSentMessage(true);
